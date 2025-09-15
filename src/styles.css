@@ -1,1 +1,248 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(222.2 84% 4.9%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(222.2 84% 4.9%);
+  --color-primary: hsl(203.59 100% 28.43%);
+  --color-primary-foreground: hsl(210 40% 98%);
+  --color-secondary: hsl(210 40% 86.1%);
+  --color-secondary-foreground: hsl(222.2 47.4% 11.2%);
+  --color-muted: hsl(210 40% 96.1%);
+  --color-muted-foreground: hsl(215.4 16.3% 46.9%);
+  --color-accent: hsl(210 40% 96.1%);
+  --color-accent-foreground: hsl(222.2 47.4% 11.2%);
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(210 40% 98%);
+  --color-border: hsl(214.3 31.8% 91.4%);
+  --color-input: hsl(214.3 31.8% 97.4%);
+  --color-ring: hsl(221.2 83.2% 53.3%);
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(222.2 84% 4.9%);
+
+  /* Chart colors */
+  --color-chart-1: hsl(12 76% 61%);
+  --color-chart-2: hsl(173 58% 39%);
+  --color-chart-3: hsl(197 37% 24%);
+  --color-chart-4: hsl(43 74% 66%);
+  --color-chart-5: hsl(27 87% 67%);
+
+  /* Border radius */
+  --radius: 1rem;
+
+  /* Font families */
+  --font-family-sans: "mainFontEn", sans-serif;
+  --font-family-ar: "mainFontAr", sans-serif;
+}
+
+/* Fonts */
+@font-face {
+  font-family: "mainFontEn";
+  src: url("../src/assets/fonts/English/Taminat_English.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "mainFontAr";
+  src: url("../src/assets/fonts/Arabic/Taminat_Arabic.otf.ttf")
+    format("truetype");
+}
+
+/* Base font family for all elements */
+html {
+  font-family: "mainFontAr", "mainFontEn", sans-serif;
+}
+
+/* For LTR (English) pages */
+html[dir="ltr"] {
+  font-family: "mainFontEn", sans-serif;
+}
+
+/* For RTL (Arabic) pages */
+html[dir="rtl"] {
+  font-family: "mainFontAr", "mainFontEn", sans-serif;
+}
+
+/* Ensure English text within Arabic content uses the English font */
+html[dir="rtl"] [lang="en"],
+html[dir="rtl"] .en-text {
+  font-family: "mainFontEn", sans-serif;
+}
+
+/* Ensure Arabic text within English content uses the Arabic font */
+html[dir="ltr"] [lang="ar"],
+html[dir="ltr"] .ar-text {
+  font-family: "mainFontAr", sans-serif;
+}
+
+/* Mixed content handling */
+.mixed-content {
+  font-family: "mainFontAr", "mainFontEn", sans-serif;
+}
+
+/* Base styles */
+* {
+  border-color: theme(--color-border);
+}
+
+body {
+  background-color: theme(--color-background);
+  color: theme(--color-foreground);
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+#root {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100vh;
+}
+
+/* Custom Scrollbar - Webkit */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+  border: 3px solid transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+/* Custom Scrollbar - Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #888 transparent;
+}
+
+/* Base form input styles */
+@utility form-input {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary;
+  @apply disabled:bg-gray-100 disabled:cursor-not-allowed;
+}
+
+/* Form select styles */
+@utility form-select {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary;
+  @apply disabled:bg-gray-100 disabled:cursor-not-allowed;
+  @apply bg-white;
+}
+
+/* Form label styles */
+@utility form-label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+/* Required field asterisk */
+@utility required-asterisk {
+  @apply text-red-500 ml-1;
+}
+
+/* Form helper text */
+@utility form-helper {
+  @apply mt-1 text-sm text-gray-500;
+}
+
+/* Form error text */
+@utility form-error {
+  @apply mt-1 text-sm text-red-600;
+}
+
+/* Custom classes for RTL support */
+@utility form-input-rtl {
+  @apply form-input;
+  @apply text-right;
+  direction: rtl;
+}
+
+@utility form-select-rtl {
+  @apply form-select;
+  @apply text-right;
+  direction: rtl;
+}
+
+/* Grid utilities for form layouts */
+@utility form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+@utility form-grid-3 {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
+
+/* Alert styles */
+@utility alert-success {
+  @apply bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md;
+}
+
+@utility alert-error {
+  @apply bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md;
+}
+
+@utility alert-warning {
+  @apply bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md;
+}
+
+@utility alert-info {
+  @apply bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-md;
+}
+
+/* Button variants */
+@utility btn-primary {
+  @apply inline-flex items-center px-6 py-3;
+  @apply border border-transparent text-base font-medium rounded-md shadow-sm;
+  @apply text-white bg-primary hover:bg-primary/90;
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply transition-colors duration-200;
+}
+
+@utility btn-secondary {
+  @apply inline-flex items-center px-6 py-3;
+  @apply border border-gray-300 text-base font-medium rounded-md shadow-sm;
+  @apply text-gray-700 bg-white hover:bg-gray-50;
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply transition-colors duration-200;
+}
+
+/* Card styles */
+@utility card {
+  @apply bg-white shadow rounded-lg;
+}
+
+@utility card-header {
+  @apply px-6 py-4 border-b border-gray-200;
+}
+
+@utility card-body {
+  @apply p-6;
+}
+
+/* Page container */
+@utility page-container {
+  @apply min-h-screen bg-gray-50 py-8;
+}
+
+@utility page-wrapper {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Usage in components:
+   <input class="form-input" />
+   <select class="form-select" />
+   <label class="form-label">Label<span class="required-asterisk">*</span></label>
+   <div class="alert-success">Success message</div>
+   <button class="btn-primary">Submit</button>
+*/

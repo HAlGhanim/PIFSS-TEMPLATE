@@ -1,0 +1,46 @@
+trigger:
+  - main
+
+pool:
+  vmImage: windows-2022
+
+jobs:
+  - job: BuildAndPublish
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: "22.x"
+        displayName: "Install Node.js"
+
+      - task: Npm@1
+        displayName: "Install Angular CLI"
+        inputs:
+          command: custom
+          customCommand: "install -g @angular/cli@20.1.5"
+
+      - task: Npm@1
+        displayName: "Install Dependencies"
+        inputs:
+          command: install
+
+      - task: Npm@1
+        displayName: "Build Angular App"
+        inputs:
+          command: custom
+          # The href should be the same as the virtual path / virtual application of the deployed server
+          customCommand: "run build -- --configuration=production --base-href /ADD-YOUR-OWN-HREF/"
+
+      - task: CopyFiles@2
+        displayName: "Copy Build Output to Artifact Staging Directory"
+        inputs:
+          # Make sure to change the project name in angular.json, package.json, and package-lock.json
+          SourceFolder: "dist/YOUR-PROJECT-NAME/browser"
+          Contents: "**"
+          TargetFolder: "$(Build.ArtifactStagingDirectory)"
+
+      - task: PublishPipelineArtifact@1
+        displayName: "Publish Build Artifacts"
+        inputs:
+          targetPath: "$(Build.ArtifactStagingDirectory)"
+          ArtifactName: "GccReportFrontendProdPublish"
+          publishLocation: "pipeline"

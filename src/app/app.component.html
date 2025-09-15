@@ -1,0 +1,11 @@
+<div class="h-screen flex flex-col bg-gray-50">
+  <!-- Main Content Area with proper spacing for fixed navbar and sidebar -->
+  <div class="flex h-full pt-16">
+    <!-- Content area with right padding for sidebar on larger screens -->
+    <!-- Add the following to the main tag once you have implemented msal -->
+    <!-- [ngClass]="{ 'pr-64': isAuthenticated(), 'pr-0': !isAuthenticated() }" -->
+    <main class="flex-1 overflow-auto">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

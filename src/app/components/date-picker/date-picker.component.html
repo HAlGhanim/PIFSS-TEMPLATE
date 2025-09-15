@@ -1,0 +1,10 @@
+<input
+  type="date"
+  [value]="value"
+  (input)="onChange($event)"
+  (blur)="onBlur($event)"
+  class="form-input-rtl"
+  [max]="maxDate()"
+  [min]="minDate()"
+  [disabled]="disabled"
+/>

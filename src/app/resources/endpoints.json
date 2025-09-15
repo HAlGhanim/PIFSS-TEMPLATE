@@ -1,0 +1,8 @@
+{
+  "GCCRPT20": {
+    "endpoint": "GCC/GetGCCRPT20",
+    "method": "GET",
+    "acceptHeader": "application/x-zip-compressed",
+    "description": "كشف لأصحاب الأعمال الخليجيين ممن يعمل لديهم كويتيين بالعملة الخليجية"
+  }
+}
