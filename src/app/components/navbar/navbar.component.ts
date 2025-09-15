@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { Router, RouterLinkActive, RouterModule } from '@angular/router';
-import { MsalAuthService } from '../../services/app-services/msal-auth.service';
+// import { MsalAuthService } from '../../services/app-services/msal-auth.service';
 import { PifssLogoHComponent } from '../icons/pifss-logo-h/pifss-logo-h.component';
 
 @Component({
@@ -37,38 +37,39 @@ import { PifssLogoHComponent } from '../icons/pifss-logo-h/pifss-logo-h.componen
   ],
 })
 export class NavbarComponent {
-  authService = inject(MsalAuthService);
+  //uncomment once msal is configured
+  // authService = inject(MsalAuthService);
   private router = inject(Router);
 
   links = [
     {
-      label: 'WHATEVER YOUR LABEL NAME IS',
-      path: '/YOUR-NAVIGATION-PATH',
-      icon: 'WHATEVER THE SWITCH CASE IN THE HTML IS',
+      label: 'showcase',
+      path: '/showcase',
+      icon: 'WHATEVER',
     },
   ];
 
   logout() {
-    this.authService.logoutRedirect();
+    // this.authService.logoutRedirect();
   }
 
-  getUserInitials(): string {
-    const name = this.authService.getUserDisplayName();
+  // getUserInitials(): string {
+  //   const name = this.authService.getUserDisplayName();
 
-    if (!name) return 'U';
+  //   if (!name) return 'U';
 
-    const arabicRegex = /[\u0600-\u06FF]/;
-    const hasArabic = arabicRegex.test(name);
+  //   const arabicRegex = /[\u0600-\u06FF]/;
+  //   const hasArabic = arabicRegex.test(name);
 
-    if (hasArabic) {
-      const arabicPart = name.match(/[\u0600-\u06FF\s]+/)?.[0]?.trim();
-      if (arabicPart) {
-        return arabicPart[0];
-      }
-    }
+  //   if (hasArabic) {
+  //     const arabicPart = name.match(/[\u0600-\u06FF\s]+/)?.[0]?.trim();
+  //     if (arabicPart) {
+  //       return arabicPart[0];
+  //     }
+  //   }
 
-    return name.trim()[0].toUpperCase();
-  }
+  //   return name.trim()[0].toUpperCase();
+  // }
 
   isActiveRoute(path: string): boolean {
     return this.router.url === path;

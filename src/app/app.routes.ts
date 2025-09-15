@@ -4,18 +4,19 @@ import { MsalGuard } from '@azure/msal-angular';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'YOUR-DEFAULT-ROUTE',
+    redirectTo: 'showcase',
     pathMatch: 'full',
   },
   // example route
   {
-    path: 'whatever',
-    title: 'ARABIC-TITLE-OF-THE-PAGE',
+    path: 'showcase',
+    title: 'Component Showcase',
     // once Msal is configured uncomment this
     // canActivate: [MsalGuard],
     // calling component this way for lazy loading
-    // loadComponent: () => import('../app/pages/YOUR-COMPONENT.TS-PAGE').then(
-    //     (m) => m.YOUR-COMPONENT
-    //   ),
+    loadComponent: () =>
+      import('../app/pages/showcase.component').then(
+        (m) => m.ShowcaseComponent
+      ),
   },
 ];
