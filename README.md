@@ -352,10 +352,7 @@ To see all components in action, create the showcase component and add it to you
 
 For technical support or questions:
 
-- Infrastructure/MSAL: Contact Nidheesh Nattiala
-
-## 🔄 Version History
-
-- **v1.0.0** - Initial release with Angular 20, MSAL authentication, and core components
+- Infrastructure/MSAL: Nidheesh Nattiala - Nidheesh@pifss.gov.kw
+- Infrastructure/Pipelines - CI/CD: Abdulmutalib AlHaddad - AHAlhaddad@pifss.gov.kw
 
 ---
