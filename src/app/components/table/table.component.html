@@ -116,40 +116,41 @@
               [style.width]="column.width"
               class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider"
               [ngClass]="[
-                getTextAlign(column),
                 column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
               ]"
               (click)="onSort(column)"
             >
               <div
-                class="flex items-center gap-1"
+                class="flex gap-1"
                 [ngClass]="{
                   'justify-start': column.align === 'left',
                   'justify-center': column.align === 'center',
                   'justify-end': column.align === 'right' || !column.align
                 }"
               >
-                <span>{{ column.label }}</span>
-                @if (column.sortable) {
-                <svg
-                  class="w-4 h-4 sort-icon transition-transform"
-                  [class.asc]="
-                    sortBy() === column.key && sortDirection() === 'asc'
-                  "
-                  [class.text-primary]="sortBy() === column.key"
-                  [class.text-gray-400]="sortBy() !== column.key"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-                }
+                <div class="flex w-full">
+                  <span>{{ column.label }}</span>
+                  @if (column.sortable) {
+                  <svg
+                    class="w-4 h-4 sort-icon transition-transform"
+                    [class.asc]="
+                      sortBy() === column.key && sortDirection() === 'asc'
+                    "
+                    [class.text-primary]="sortBy() === column.key"
+                    [class.text-gray-400]="sortBy() !== column.key"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                  }
+                </div>
               </div>
             </th>
             }

@@ -319,11 +319,6 @@ export class TableComponent implements OnInit {
         return value?.toString() || '';
     }
   }
-
-  getTextAlign(column: TableColumn): string {
-    return 'text-right';
-  }
-
   private scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
