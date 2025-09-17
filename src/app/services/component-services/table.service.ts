@@ -199,144 +199,6 @@ export class TableService extends BaseService {
   }
 
   /**
-   * Export table data to CSV
-   */
-  exportToCSV<T extends Record<string, any>>(
-    data: T[],
-    filename: string = 'export.csv',
-    columns?: { key: string; label: string }[]
-  ): void {
-    if (!data || data.length === 0) {
-      console.warn('No data to export');
-      return;
-    }
-
-    // Determine columns to export
-    const columnsToExport =
-      columns || Object.keys(data[0]).map((key) => ({ key, label: key }));
-
-    // Create CSV header
-    const headers = columnsToExport.map((col) =>
-      this.escapeCsvValue(col.label)
-    );
-    const csvHeader = headers.join(',');
-
-    // Create CSV rows
-    const csvRows = data.map((row) => {
-      return columnsToExport
-        .map((col) => {
-          const value = row[col.key];
-          return this.escapeCsvValue(this.formatCsvValue(value));
-        })
-        .join(',');
-    });
-
-    // Combine header and rows
-    const csvContent = [csvHeader, ...csvRows].join('\n');
-
-    // Add BOM for proper UTF-8 encoding in Excel
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + csvContent], {
-      type: 'text/csv;charset=utf-8;',
-    });
-
-    // Download file
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  /**
-   * Export table data to Excel using API endpoint
-   */
-  exportToExcel<T>(
-    endpoint: string,
-    params: TableQueryParams,
-    filename: string = 'export.xlsx'
-  ): Observable<void> {
-    const httpParams = this.buildHttpParams({
-      ...params,
-      export: 'excel',
-    } as any);
-
-    return this.getBlob(
-      endpoint,
-      { Accept: 'application/vnd.ms-excel' },
-      httpParams
-    ).pipe(
-      tap((response) => {
-        if (response.body) {
-          const blob = new Blob([response.body], {
-            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          });
-          const link = document.createElement('a');
-          const url = URL.createObjectURL(blob);
-          link.setAttribute('href', url);
-          link.setAttribute('download', filename);
-          link.style.visibility = 'hidden';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-      }),
-      switchMap(() => of(void 0)),
-      catchError((error) => {
-        console.error('Export failed:', error);
-        throw error;
-      })
-    );
-  }
-
-  /**
-   * Helper: Escape CSV values
-   */
-  private escapeCsvValue(value: string): string {
-    if (value === null || value === undefined) {
-      return '';
-    }
-
-    value = value.toString();
-
-    // Check if value needs escaping
-    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-      // Escape quotes by doubling them
-      value = value.replace(/"/g, '""');
-      // Wrap in quotes
-      value = `"${value}"`;
-    }
-
-    return value;
-  }
-
-  /**
-   * Helper: Format value for CSV export
-   */
-  private formatCsvValue(value: any): string {
-    if (value === null || value === undefined) {
-      return '';
-    }
-
-    if (typeof value === 'boolean') {
-      return value ? 'نعم' : 'لا';
-    }
-
-    if (value instanceof Date) {
-      return value.toLocaleDateString('ar-SA');
-    }
-
-    if (typeof value === 'object') {
-      return JSON.stringify(value);
-    }
-
-    return value.toString();
-  }
-
-  /**
    * Helper: Get user-friendly error message
    */
   private getErrorMessage(error: any): string {
@@ -392,11 +254,16 @@ export class TableService extends BaseService {
 
         // Apply search
         if (search) {
-          const searchLower = search.toLowerCase();
+          const searchNormalized = this.normalizeArabicText(
+            search.toLowerCase()
+          );
           filtered = filtered.filter((item) =>
-            Object.values(item as any).some((value) =>
-              value?.toString().toLowerCase().includes(searchLower)
-            )
+            Object.values(item as any).some((value) => {
+              const valueNormalized = this.normalizeArabicText(
+                value?.toString().toLowerCase() || ''
+              );
+              return valueNormalized.includes(searchNormalized);
+            })
           );
         }
 
@@ -492,5 +359,33 @@ export class TableService extends BaseService {
         filters$.next(initialParams.filters || {});
       },
     };
+  }
+
+  /**
+   * Normalize Arabic text for better search matching
+   * Removes diacritics and normalizes different forms of characters
+   */
+  private normalizeArabicText(text: string): string {
+    if (!text) return '';
+
+    // Remove Arabic diacritics (tashkeel)
+    let normalized = text.replace(/[\u064B-\u065F\u0670]/g, '');
+
+    // Normalize different forms of alef
+    normalized = normalized.replace(/[أإآ]/g, 'ا');
+
+    // Normalize different forms of yaa
+    normalized = normalized.replace(/[ىي]/g, 'ي');
+
+    // Normalize taa marbouta to haa
+    normalized = normalized.replace(/ة/g, 'ه');
+
+    // Normalize different forms of waw with hamza
+    normalized = normalized.replace(/ؤ/g, 'و');
+
+    // Normalize yaa with hamza
+    normalized = normalized.replace(/ئ/g, 'ي');
+
+    return normalized;
   }
 }

@@ -21,57 +21,7 @@ interface Employee {
   selector: 'app-employee-list',
   standalone: true,
   imports: [CommonModule, TableComponent],
-  template: `
-    <div class="p-6">
-      <h1 class="text-2xl font-bold mb-6">قائمة الموظفين</h1>
-
-      <!-- Example with API data -->
-      <div class="mb-8">
-        <h2 class="text-lg font-semibold mb-4">مثال مع بيانات من API</h2>
-        <app-table
-          [columns]="columns"
-          [data]="(tableState.data$ | async) || []"
-          [totalItems]="(tableState.totalItems$ | async) || 0"
-          [loading]="(tableState.loading$ | async) || false"
-          [selectable]="true"
-          [searchable]="true"
-          [rowClickable]="true"
-          [actions]="actions"
-          (pageChange)="onPageChange($event)"
-          (pageSizeChange)="onPageSizeChange($event)"
-          (sortChange)="onSortChange($event)"
-          (searchChange)="onSearchChange($event)"
-          (selectionChange)="onSelectionChange($event)"
-          (rowClick)="onRowClick($event)"
-          (refresh)="onRefresh()"
-        />
-      </div>
-
-      <!-- Example with static data -->
-      <div>
-        <h2 class="text-lg font-semibold mb-4">مثال مع بيانات ثابتة</h2>
-        <app-table
-          [columns]="simpleColumns"
-          [data]="staticData"
-          [totalItems]="staticData.length"
-          [selectable]="false"
-          [searchable]="false"
-          [syncWithUrl]="false"
-          [pageSizeOptions]="[5, 10, 20]"
-        />
-      </div>
-
-      <!-- Export buttons -->
-      <div class="mt-6 flex gap-4">
-        <button (click)="exportToCSV()" class="btn-secondary">
-          تصدير إلى CSV
-        </button>
-        <button (click)="exportToExcel()" class="btn-secondary">
-          تصدير إلى Excel
-        </button>
-      </div>
-    </div>
-  `,
+  templateUrl: `./employee-list.component.html`,
 })
 export class EmployeeListComponent implements OnInit {
   private tableService = inject(TableService);
@@ -390,34 +340,5 @@ export class EmployeeListComponent implements OnInit {
       // Call delete API
       this.tableState.refresh();
     }
-  }
-
-  // Export functions
-  async exportToCSV() {
-    const data = await this.tableState.data$.pipe().toPromise();
-    if (data) {
-      this.tableService.exportToCSV(
-        data,
-        'employees.csv',
-        this.columns.filter((col) => col.key !== 'actions')
-      );
-      this.toastService.showSuccess('تم تصدير البيانات إلى CSV');
-    }
-  }
-
-  exportToExcel() {
-    this.tableState.currentState$.pipe().subscribe((state) => {
-      this.tableService
-        .exportToExcel('/api/employees/export', state, 'employees.xlsx')
-        .subscribe({
-          next: () => {
-            this.toastService.showSuccess('تم تصدير البيانات إلى Excel');
-          },
-          error: (error) => {
-            this.toastService.showError('فشل تصدير البيانات');
-            console.error('Export error:', error);
-          },
-        });
-    });
   }
 }

@@ -2,15 +2,13 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   computed,
-  effect,
   inject,
   input,
   output,
   signal,
   OnInit,
 } from '@angular/core';
-import { FormControl, NgModel, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { TableAction, TableColumn } from '../../interfaces';
 
@@ -113,9 +111,6 @@ import { TableAction, TableColumn } from '../../interfaces';
   ],
 })
 export class TableComponent implements OnInit {
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-
   // Inputs
   columns = input.required<TableColumn[]>();
   data = input.required<any[]>();
@@ -125,9 +120,9 @@ export class TableComponent implements OnInit {
   searchable = input<boolean>(true);
   emptyMessage = input<string>('لا توجد بيانات للعرض');
   pageSizeOptions = input<number[]>([10, 25, 50, 100]);
-  syncWithUrl = input<boolean>(true);
   rowClickable = input<boolean>(false);
   actions = input<TableAction[]>([]);
+  initialPageSize = input<number>(10); // New input for initial page size
 
   // Outputs
   pageChange = output<number>();
@@ -155,7 +150,8 @@ export class TableComponent implements OnInit {
   });
 
   startItem = computed(() => {
-    return (this.currentPage() - 1) * this.pageSize() + 1;
+    const start = (this.currentPage() - 1) * this.pageSize() + 1;
+    return this.totalItems() > 0 ? start : 0;
   });
 
   endItem = computed(() => {
@@ -202,94 +198,15 @@ export class TableComponent implements OnInit {
       .pipe(debounceTime(500), distinctUntilChanged())
       .subscribe((value) => {
         this.onSearch(value || '');
-        if (this.syncWithUrl()) {
-          this.updateUrl();
-        }
       });
   }
 
   ngOnInit(): void {
-    // Initialize from URL on component init
-    if (this.syncWithUrl()) {
-      this.initializeFromUrl();
+    // Set initial page size from input
+    const initialSize = this.initialPageSize();
+    if (this.pageSizeOptions().includes(initialSize)) {
+      this.pageSize.set(initialSize);
     }
-
-    // Setup effect after initialization
-    effect(() => {
-      if (this.syncWithUrl()) {
-        // Access all reactive values to track them
-        const page = this.currentPage();
-        const size = this.pageSize();
-        const sort = this.sortBy();
-        const dir = this.sortDirection();
-
-        // Update URL
-        this.updateUrl();
-      }
-    });
-  }
-
-  private initializeFromUrl() {
-    const params = this.route.snapshot.queryParams;
-
-    if (params['page']) {
-      const page = parseInt(params['page'], 10);
-      this.currentPage.set(page);
-      // Emit the change to parent component
-      setTimeout(() => this.pageChange.emit(page), 0);
-    }
-    if (params['pageSize']) {
-      const pageSize = parseInt(params['pageSize'], 10);
-      this.pageSize.set(pageSize);
-      // Emit the change to parent component
-      setTimeout(() => this.pageSizeChange.emit(pageSize), 0);
-    }
-    if (params['sortBy']) {
-      this.sortBy.set(params['sortBy']);
-      if (params['sortDirection']) {
-        this.sortDirection.set(params['sortDirection'] as 'asc' | 'desc');
-      }
-      // Emit the change to parent component
-      setTimeout(
-        () =>
-          this.sortChange.emit({
-            sortBy: this.sortBy(),
-            sortDirection: this.sortDirection(),
-          }),
-        0
-      );
-    }
-    if (params['search']) {
-      this.searchControl.setValue(params['search'], { emitEvent: false });
-      // Emit the change to parent component
-      setTimeout(() => this.searchChange.emit(params['search']), 0);
-    }
-  }
-
-  private updateUrl() {
-    if (!this.syncWithUrl()) return;
-
-    const queryParams: any = {};
-
-    // Always include all params to ensure they're properly tracked
-    queryParams.page = this.currentPage();
-    queryParams.pageSize = this.pageSize();
-
-    if (this.sortBy()) {
-      queryParams.sortBy = this.sortBy();
-      queryParams.sortDirection = this.sortDirection();
-    }
-
-    const searchValue = this.searchControl.value;
-    if (searchValue) {
-      queryParams.search = searchValue;
-    }
-
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams,
-      queryParamsHandling: 'replace', // Changed from 'merge' to 'replace'
-    });
   }
 
   onPageChange(page: number | string) {
@@ -298,10 +215,6 @@ export class TableComponent implements OnInit {
     this.currentPage.set(page);
     this.pageChange.emit(page);
     this.scrollToTop();
-
-    if (this.syncWithUrl()) {
-      this.updateUrl();
-    }
   }
 
   onPageSizeChange(event: Event) {
@@ -309,20 +222,14 @@ export class TableComponent implements OnInit {
     this.pageSize.set(size);
     this.currentPage.set(1); // Reset to first page
     this.pageSizeChange.emit(size);
-
-    if (this.syncWithUrl()) {
-      this.updateUrl();
-    }
   }
 
   onSort(column: TableColumn) {
     if (!column.sortable) return;
 
     if (this.sortBy() === column.key) {
-      // Toggle direction
       this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
     } else {
-      // New column
       this.sortBy.set(column.key);
       this.sortDirection.set('asc');
     }
@@ -331,10 +238,6 @@ export class TableComponent implements OnInit {
       sortBy: this.sortBy(),
       sortDirection: this.sortDirection(),
     });
-
-    if (this.syncWithUrl()) {
-      this.updateUrl();
-    }
   }
 
   onSearch(value: string) {
@@ -418,7 +321,6 @@ export class TableComponent implements OnInit {
   }
 
   getTextAlign(column: TableColumn): string {
-    // Always return text-right for RTL layout
     return 'text-right';
   }
 
@@ -426,7 +328,6 @@ export class TableComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Helper for tracking
   trackByIndex(index: number): number {
     return index;
   }

@@ -168,7 +168,7 @@
           @if (data().length === 0) {
           <tr>
             <td
-              [colspan]="
+              [attr.colspan]="
                 columns().length +
                 (selectable() ? 1 : 0) +
                 (actions().length > 0 ? 1 : 0)
@@ -281,8 +281,8 @@
         <label for="pageSize" class="text-sm text-gray-700">عرض:</label>
         <select
           id="pageSize"
-          [ngModel]="pageSize()"
-          (ngModelChange)="onPageSizeChangeValue($event)"
+          [value]="pageSize()"
+          (change)="onPageSizeChange($event)"
           class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
         >
           @for (size of pageSizeOptions(); track size) {
