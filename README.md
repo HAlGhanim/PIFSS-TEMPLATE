@@ -20,6 +20,7 @@ A modern, production-ready Angular 20 template specifically designed for the Pub
 - ✅ **Form Validation** - Custom validators for Kuwait-specific data (Civil ID, etc.)
 - ✅ **Error Handling** - Global error interceptor with Arabic messages
 - ✅ **Loading States** - Automatic loading indicators for HTTP requests
+- ✅ **Toast Notifications** - Clean toast notification system
 - ✅ **File Download Service** - Utility for handling file downloads
 - ✅ **Responsive Design** - Mobile-first approach with Tailwind CSS
 - ✅ **Azure DevOps Ready** - Pre-configured pipeline YAML
@@ -30,7 +31,6 @@ A modern, production-ready Angular 20 template specifically designed for the Pub
 src/
 ├── app/
 │   ├── components/           # Reusable UI components
-│   │   ├── alert/            # Alert/notification component
 │   │   ├── button/           # Custom button with loading states
 │   │   ├── card/             # Card container component
 │   │   ├── date-picker/      # Date picker with validation
@@ -41,7 +41,8 @@ src/
 │   │   ├── icons/            # PIFSS logo components
 │   │   ├── navbar/           # Navigation bar with sidebar
 │   │   ├── page-header/      # Page title header
-│   │   └── report-container/ # Report page wrapper
+│   │   ├── report-container/ # Report page wrapper
+│   │   └── toast/            # Toast notification component
 │   │
 │   ├── config/               # Configuration files
 │   │   └── auth.config.ts    # MSAL authentication config
@@ -51,6 +52,8 @@ src/
 │   │   └── loading.interceptor.ts  # Loading state management
 │   │
 │   ├── interfaces/           # TypeScript interfaces
+│   │   ├── select/           # Select component interfaces
+│   │   └── toast/            # Toast notification interfaces
 │   │
 │   ├── resources/            # Static resources
 │   │   └── endpoints.json    # API endpoint definitions
@@ -58,16 +61,20 @@ src/
 │   ├── services/             # Application services
 │   │   ├── api-services/     # API communication services
 │   │   │   └── base.service.ts
-│   │   └── app-services/     # Application-level services
-│   │       ├── file-download.service.ts
-│   │       ├── loading.service.ts
-│   │       ├── message.service.ts
-│   │       └── msal-auth.service.ts
+│   │   ├── app-services/     # Application-level services
+│   │   │   ├── file-download.service.ts
+│   │   │   ├── loading.service.ts
+│   │   │   └── msal-auth.service.ts
+│   │   └── component-services/
+│   │       └── toast.service.ts    # Toast notification service
 │   │
 │   ├── utils/                # Utility functions
 │   │   ├── DateUtils.class.ts      # Date manipulation utilities
 │   │   ├── apiValidationError.ts   # API error parsing
 │   │   └── validators.ts           # Custom form validators
+│   │
+│   ├── pages/                # Page components
+│   │   └── showcase.component.ts   # Component showcase page
 │   │
 │   ├── app.component.ts      # Root component
 │   ├── app.config.ts         # App configuration
@@ -90,7 +97,7 @@ src/
 - npm or yarn package manager
 - Angular CLI (`npm install -g @angular/cli@20`)
 
-### Installation
+### Installation & Project Setup
 
 1. **Clone the repository**
 
@@ -99,13 +106,60 @@ src/
    cd PIFSS-Template
    ```
 
-2. **Install dependencies**
+2. **Rename the project from PIFSS-Template to your project name**
+
+   Update the following files with your project name (replace `YOUR-PROJECT-NAME` with your actual project name):
+
+   **a. package.json**
+
+   ```json
+   {
+     "name": "your-project-name",  // Change from "pifss-template"
+     ...
+   }
+   ```
+
+   **b. angular.json**
+
+   ```json
+   {
+     "projects": {
+       "YOUR-PROJECT-NAME": {  // Change from "PIFSS-Template"
+         ...
+       }
+     }
+   }
+   ```
+
+   **c. package-lock.json**
+
+   - Search and replace all occurrences of `"pifss-template"` with `"your-project-name"`
+   - Search and replace all occurrences of `"PIFSS-Template"` with `"YOUR-PROJECT-NAME"`
+
+   **d. src/index.html**
+
+   ```html
+   <title>YOUR-PROJECT-NAME</title>
+   <!-- Change from "PIFSSTemplate" -->
+   ```
+
+   **e. azure-pipelines.yml**
+
+   ```yaml
+   # Update the SourceFolder path
+   SourceFolder: "dist/YOUR-PROJECT-NAME/browser" # Change from "dist/YOUR-PROJECT-NAME/browser"
+
+   # Update the base href
+   customCommand: "run build -- --configuration=production --base-href /YOUR-APP-PATH/"
+   ```
+
+3. **Install dependencies**
 
    ```bash
    npm install
    ```
 
-3. **Configure MSAL Authentication**
+4. **Configure MSAL Authentication**
 
    Update `src/environment.ts` and `src/environment.prod.ts`:
 
@@ -118,13 +172,13 @@ src/
    }
    ```
 
-4. **Update API Base URL**
+5. **Update API Base URL**
 
    ```typescript
    baseurl: "https://your-api-endpoint.com";
    ```
 
-5. **Run the development server**
+6. **Run the development server**
    ```bash
    npm start
    ```
@@ -176,10 +230,22 @@ Navbar Example:
 
 ## 📦 Available Components
 
-### Alert Component
+### Toast Notifications
 
-```html
-<app-alert [show]="true" type="success" message="رسالة النجاح"> </app-alert>
+```typescript
+// In your component
+import { ToastService } from './services';
+
+constructor(private toastService: ToastService) {}
+
+// Show success toast
+this.toastService.showSuccess('Operation completed successfully!');
+
+// Show error toast
+this.toastService.showError('An error occurred');
+
+// Show with custom duration (in milliseconds)
+this.toastService.showSuccess('Message', 5000);
 ```
 
 ### Button Component
@@ -200,6 +266,12 @@ Navbar Example:
 
 ```html
 <app-date-picker formControlName="date" [maxDate]="maxDate" [minDate]="minDate"> </app-date-picker>
+```
+
+### Select with Groups
+
+```html
+<app-form-select-group formControlName="department" placeholder="اختر القسم" [groups]="departmentGroups" [showIndex]="true"> </app-form-select-group>
 ```
 
 ## 🛠️ Custom Validators
@@ -242,9 +314,26 @@ The project uses Tailwind CSS v4 with custom PIFSS theme colors:
 - `.form-input-rtl` - RTL text input
 - `.btn-primary` - Primary button style
 - `.btn-secondary` - Secondary button style
-- `.alert-success/error/warning/info` - Alert styles
+- `.card` - Card container style
+- `.form-grid` - Form grid layout
 
 ## 📋 Services
+
+### ToastService
+
+Display toast notifications:
+
+```typescript
+// Inject the service
+private toastService = inject(ToastService);
+
+// Show notifications
+toastService.showSuccess("Success message");
+toastService.showError("Error message");
+
+// Clear all toasts
+toastService.clearAll();
+```
 
 ### MsalAuthService
 
@@ -263,20 +352,16 @@ Handles file downloads:
 
 ```typescript
 fileDownloadService.downloadFile(blob, filename);
-```
-
-### MessageService
-
-Global message notifications:
-
-```typescript
-messageService.showSuccess("Success message");
-messageService.showError("Error message");
+fileDownloadService.getFileNameFromResponse(response);
 ```
 
 ### LoadingService
 
-Loading state management (automatically handled by interceptor)
+Loading state management (automatically handled by interceptor):
+
+```typescript
+loadingService.isLoading(); // Returns signal<boolean>
+```
 
 ## 🚢 Deployment
 
@@ -333,16 +418,18 @@ npm run build -- --configuration=production
 
 ## 🧪 Example Page
 
-To see all components in action, create the showcase component and add it to your routes:
+The template includes a comprehensive showcase page demonstrating all components. To view it:
 
-```typescript
-// In app.routes.ts
-{
-  path: 'showcase',
-  title: 'Component Showcase',
-  loadComponent: () => import('./showcase.component').then(m => m.ShowcaseComponent)
-}
-```
+1. Run the development server: `npm start`
+2. Navigate to `http://localhost:4200/showcase`
+
+The showcase includes:
+
+- Toast notification examples
+- Complete form with validation
+- All button states
+- Statistics cards
+- Form components with error handling
 
 ## 🤝 Contributing
 
@@ -359,3 +446,28 @@ For technical support or questions:
 - Infrastructure/Pipelines - CI/CD: Abdulmutalib AlHaddad - AHAlhaddad@pifss.gov.kw
 
 ---
+
+## Quick Reference
+
+### Common Commands
+
+```bash
+# Development server
+npm start
+
+# Build for production
+npm run build -- --configuration=production
+
+# Run tests
+npm test
+```
+
+### Project Checklist
+
+- [ ] Rename project from PIFSS-Template
+- [ ] Configure MSAL authentication
+- [ ] Update API base URL
+- [ ] Update Azure Pipeline configuration
+- [ ] Test RTL/Arabic support
+- [ ] Configure navigation links
+- [ ] Set up routes with guards
