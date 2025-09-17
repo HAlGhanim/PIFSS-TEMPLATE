@@ -17,6 +17,7 @@ A modern, production-ready Angular 20 template specifically designed for the Pub
 - ✅ **Arabic/RTL Support** - Full right-to-left layout support with custom Arabic fonts
 - ✅ **MSAL Authentication** - Pre-configured Azure AD authentication with guards and interceptors
 - ✅ **Reusable Components** - Production-ready UI components library
+- ✅ **Advanced Table Component** - Feature-rich data table with pagination, sorting, and search
 - ✅ **Form Validation** - Custom validators for Kuwait-specific data (Civil ID, etc.)
 - ✅ **Error Handling** - Global error interceptor with Arabic messages
 - ✅ **Loading States** - Automatic loading indicators for HTTP requests
@@ -42,6 +43,7 @@ src/
 │   │   ├── navbar/           # Navigation bar with sidebar
 │   │   ├── page-header/      # Page title header
 │   │   ├── report-container/ # Report page wrapper
+│   │   ├── table/            # Advanced data table component
 │   │   └── toast/            # Toast notification component
 │   │
 │   ├── config/               # Configuration files
@@ -53,6 +55,7 @@ src/
 │   │
 │   ├── interfaces/           # TypeScript interfaces
 │   │   ├── select/           # Select component interfaces
+│   │   ├── table/            # Table component interfaces
 │   │   └── toast/            # Toast notification interfaces
 │   │
 │   ├── resources/            # Static resources
@@ -66,6 +69,7 @@ src/
 │   │   │   ├── loading.service.ts
 │   │   │   └── msal-auth.service.ts
 │   │   └── component-services/
+│   │       ├── table.service.ts    # Table state management
 │   │       └── toast.service.ts    # Toast notification service
 │   │
 │   ├── utils/                # Utility functions
@@ -74,7 +78,8 @@ src/
 │   │   └── validators.ts           # Custom form validators
 │   │
 │   ├── pages/                # Page components
-│   │   └── showcase.component.ts   # Component showcase page
+│   │   ├── showcase/         # Component showcase page
+│   │   └── employee-list/    # Table component example
 │   │
 │   ├── app.component.ts      # Root component
 │   ├── app.config.ts         # App configuration
@@ -274,6 +279,445 @@ this.toastService.showSuccess('Message', 5000);
 <app-form-select-group formControlName="department" placeholder="اختر القسم" [groups]="departmentGroups" [showIndex]="true"> </app-form-select-group>
 ```
 
+## 📊 Table Component
+
+The template includes a powerful, reusable table component with built-in features for pagination, sorting, searching, and selection. Perfect for displaying tabular data with minimal setup.
+
+### Table Features
+
+- ✅ **Pagination** - Built-in pagination with customizable page sizes
+- ✅ **Sorting** - Column-based sorting (ascending/descending)
+- ✅ **Search** - Real-time search across all data fields with Arabic text normalization
+- ✅ **Selection** - Row selection with checkbox support
+- ✅ **Loading States** - Automatic loading overlay
+- ✅ **Actions** - Customizable row actions with conditional rendering
+- ✅ **Responsive** - Mobile-friendly with horizontal scrolling
+- ✅ **Custom Templates** - Support for custom cell templates
+- ✅ **Static & Dynamic Data** - Works with both API and static data
+
+### Basic Table Usage
+
+```typescript
+import { TableComponent } from './components';
+import { TableColumn } from './interfaces';
+
+// Define your columns
+columns: TableColumn[] = [
+  {
+    key: 'id',
+    label: 'الرقم',
+    sortable: true,
+    width: '80px'
+  },
+  {
+    key: 'name',
+    label: 'الاسم',
+    sortable: true
+  },
+  {
+    key: 'salary',
+    label: 'الراتب',
+    sortable: true,
+    type: 'currency',
+    align: 'left'
+  },
+  {
+    key: 'joinDate',
+    label: 'تاريخ الالتحاق',
+    sortable: true,
+    type: 'date'
+  },
+  {
+    key: 'isActive',
+    label: 'الحالة',
+    sortable: true,
+    type: 'boolean'
+  }
+];
+```
+
+```html
+<app-table
+  [columns]="columns"
+  [data]="tableData"
+  [totalItems]="totalItems"
+  [loading]="isLoading"
+  [selectable]="true"
+  [searchable]="true"
+  (pageChange)="onPageChange($event)"
+  (pageSizeChange)="onPageSizeChange($event)"
+  (sortChange)="onSortChange($event)"
+  (searchChange)="onSearchChange($event)"
+  (selectionChange)="onSelectionChange($event)"
+  (refresh)="onRefresh()"
+/>
+```
+
+### Table Configuration
+
+#### Column Configuration
+
+```typescript
+interface TableColumn {
+  key: string;                    // Data property key
+  label: string;                   // Column header label
+  sortable?: boolean;              // Enable sorting (default: false)
+  width?: string;                  // Column width (e.g., '150px')
+  align?: 'left' | 'center' | 'right'; // Text alignment
+  type?: 'text' | 'number' | 'date' | 'currency' | 'boolean' | 'custom';
+  format?: (value: any) => string; // Custom formatter function
+  customTemplate?: any;            // Custom Angular template
+}
+```
+
+#### Table Inputs
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `columns` | `TableColumn[]` | Required | Column definitions |
+| `data` | `any[]` | Required | Data to display |
+| `totalItems` | `number` | 0 | Total number of items (for pagination) |
+| `loading` | `boolean` | false | Show loading overlay |
+| `selectable` | `boolean` | false | Enable row selection |
+| `searchable` | `boolean` | true | Show search box |
+| `rowClickable` | `boolean` | false | Enable row click events |
+| `actions` | `TableAction[]` | [] | Row action buttons |
+| `pageSizeOptions` | `number[]` | [10, 25, 50, 100] | Page size options |
+| `initialPageSize` | `number` | 10 | Initial page size |
+| `emptyMessage` | `string` | 'لا توجد بيانات للعرض' | Message when no data |
+
+#### Table Outputs
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `pageChange` | `number` | Fired when page changes |
+| `pageSizeChange` | `number` | Fired when page size changes |
+| `sortChange` | `{sortBy: string, sortDirection: 'asc' \| 'desc'}` | Fired on sort |
+| `searchChange` | `string` | Fired on search (debounced 500ms) |
+| `selectionChange` | `any[]` | Fired when selection changes |
+| `rowClick` | `any` | Fired when row is clicked |
+| `refresh` | `void` | Fired when refresh button clicked |
+
+### Advanced Table Features
+
+#### Row Actions
+
+Add custom actions for each row:
+
+```typescript
+actions: TableAction[] = [
+  {
+    label: 'عرض',
+    icon: '<svg>...</svg>',  // Optional icon HTML
+    handler: (row) => this.viewItem(row),
+    class: 'text-blue-600 hover:text-blue-800'
+  },
+  {
+    label: 'تعديل',
+    handler: (row) => this.editItem(row),
+    condition: (row) => row.isActive, // Show only for active items
+    class: 'text-green-600 hover:text-green-800'
+  },
+  {
+    label: 'حذف',
+    handler: (row) => this.deleteItem(row),
+    class: 'text-red-600 hover:text-red-800'
+  }
+];
+```
+
+#### Custom Cell Templates
+
+Use custom templates for complex cell content:
+
+```typescript
+// In your component
+@ViewChild('statusTemplate', { static: true }) statusTemplate!: TemplateRef<any>;
+
+columns: TableColumn[] = [
+  {
+    key: 'status',
+    label: 'الحالة',
+    customTemplate: this.statusTemplate
+  }
+];
+```
+
+```html
+<!-- Define the template -->
+<ng-template #statusTemplate let-row let-value="value">
+  <span class="badge" [class.badge-success]="value === 'active'">
+    {{ value }}
+  </span>
+</ng-template>
+```
+
+#### Custom Formatting
+
+Format cell values with custom functions:
+
+```typescript
+columns: TableColumn[] = [
+  {
+    key: 'percentage',
+    label: 'النسبة',
+    type: 'number',
+    format: (value) => `${(value * 100).toFixed(2)}%`
+  },
+  {
+    key: 'status',
+    label: 'الحالة',
+    format: (value) => {
+      const statusMap = {
+        'pending': 'قيد الانتظار',
+        'approved': 'موافق عليه',
+        'rejected': 'مرفوض'
+      };
+      return statusMap[value] || value;
+    }
+  }
+];
+```
+
+### Table Service
+
+The template includes a `TableService` for managing table state with API integration:
+
+#### With API Data
+
+```typescript
+import { TableService } from './services';
+
+export class EmployeeListComponent implements OnInit {
+  tableState!: TableStateManager<Employee>;
+
+  constructor(private tableService: TableService) {}
+
+  ngOnInit() {
+    // Create managed table state with automatic API calls
+    this.tableState = this.tableService.createTableState<Employee>(
+      '/api/employees',
+      {
+        page: 1,
+        pageSize: 10,
+        sortBy: 'name',
+        sortDirection: 'asc'
+      }
+    );
+  }
+
+  // Event handlers
+  onPageChange(page: number) {
+    this.tableState.setPage(page);
+  }
+
+  onPageSizeChange(pageSize: number) {
+    this.tableState.setPageSize(pageSize);
+  }
+
+  onSortChange(sort: { sortBy: string; sortDirection: 'asc' | 'desc' }) {
+    this.tableState.setSort(sort.sortBy, sort.sortDirection);
+  }
+
+  onSearchChange(search: string) {
+    this.tableState.setSearch(search);
+  }
+
+  onRefresh() {
+    this.tableState.refresh();
+  }
+}
+```
+
+```html
+<!-- Template with observables -->
+<app-table
+  [columns]="columns"
+  [data]="(tableState.data$ | async) || []"
+  [totalItems]="(tableState.totalItems$ | async) || 0"
+  [loading]="(tableState.loading$ | async) || false"
+  (pageChange)="onPageChange($event)"
+  (pageSizeChange)="onPageSizeChange($event)"
+  (sortChange)="onSortChange($event)"
+  (searchChange)="onSearchChange($event)"
+  (refresh)="onRefresh()"
+/>
+```
+
+#### With Static Data
+
+```typescript
+// For development or static data
+staticData = [
+  { id: 1, name: 'أحمد محمد', salary: 2500 },
+  { id: 2, name: 'فاطمة علي', salary: 3000 },
+  // ... more data
+];
+
+ngOnInit() {
+  // Create table state with static data
+  this.tableState = this.tableService.createStaticTableState(
+    this.staticData,
+    {
+      page: 1,
+      pageSize: 10,
+      sortBy: 'name',
+      sortDirection: 'asc'
+    }
+  );
+}
+```
+
+### Table State Manager Interface
+
+```typescript
+interface TableStateManager<T> {
+  data$: Observable<T[]>;              // Table data
+  totalItems$: Observable<number>;      // Total item count
+  loading$: Observable<boolean>;        // Loading state
+  error$: Observable<string | null>;   // Error messages
+  currentState$: Observable<TableQueryParams>; // Current parameters
+
+  setPage(page: number): void;
+  setPageSize(pageSize: number): void;
+  setSort(sortBy: string, direction: 'asc' | 'desc'): void;
+  setSearch(search: string): void;
+  setFilters(filters: Record<string, any>): void;
+  refresh(): void;
+  reset(): void;
+}
+```
+
+### API Response Format
+
+The table expects paginated API responses in this format:
+
+```typescript
+interface PaginatedResponse<T> {
+  data: T[];           // Array of items
+  totalItems: number;  // Total count for pagination
+  currentPage: number; // Current page number
+  pageSize: number;    // Items per page
+  totalPages: number;  // Total number of pages
+}
+```
+
+### Arabic Search Support
+
+The table includes built-in Arabic text normalization for better search results:
+
+- Removes diacritics (tashkeel)
+- Normalizes different forms of Alef (أ، إ، آ → ا)
+- Normalizes Taa Marbouta (ة → ه)
+- Normalizes different forms of Yaa (ى → ي)
+
+### Complete Table Example
+
+```typescript
+// employee-list.component.ts
+import { Component, OnInit, inject } from '@angular/core';
+import { TableService, ToastService } from '../../services';
+import { TableColumn, TableAction, TableStateManager } from '../../interfaces';
+
+interface Employee {
+  id: number;
+  civilId: string;
+  name: string;
+  department: string;
+  salary: number;
+  joinDate: string;
+  isActive: boolean;
+}
+
+@Component({
+  selector: 'app-employee-list',
+  template: `
+    <app-table
+      [columns]="columns"
+      [data]="(tableState.data$ | async) || []"
+      [totalItems]="(tableState.totalItems$ | async) || 0"
+      [loading]="(tableState.loading$ | async) || false"
+      [selectable]="true"
+      [searchable]="true"
+      [rowClickable]="true"
+      [actions]="actions"
+      [initialPageSize]="25"
+      [pageSizeOptions]="[10, 25, 50, 100]"
+      (pageChange)="tableState.setPage($event)"
+      (pageSizeChange)="tableState.setPageSize($event)"
+      (sortChange)="tableState.setSort($event.sortBy, $event.sortDirection)"
+      (searchChange)="tableState.setSearch($event)"
+      (selectionChange)="onSelectionChange($event)"
+      (rowClick)="onRowClick($event)"
+      (refresh)="tableState.refresh()"
+    />
+  `
+})
+export class EmployeeListComponent implements OnInit {
+  private tableService = inject(TableService);
+  private toastService = inject(ToastService);
+
+  tableState!: TableStateManager<Employee>;
+
+  columns: TableColumn[] = [
+    { key: 'civilId', label: 'الرقم المدني', sortable: true },
+    { key: 'name', label: 'الاسم', sortable: true },
+    { key: 'department', label: 'القسم', sortable: true },
+    { key: 'salary', label: 'الراتب', type: 'currency', sortable: true },
+    { key: 'joinDate', label: 'تاريخ الالتحاق', type: 'date', sortable: true },
+    { key: 'isActive', label: 'الحالة', type: 'boolean', sortable: true }
+  ];
+
+  actions: TableAction[] = [
+    {
+      label: 'عرض',
+      handler: (row) => this.viewEmployee(row),
+      class: 'text-blue-600'
+    },
+    {
+      label: 'تعديل',
+      handler: (row) => this.editEmployee(row),
+      condition: (row) => row.isActive
+    },
+    {
+      label: 'حذف',
+      handler: (row) => this.deleteEmployee(row),
+      class: 'text-red-600'
+    }
+  ];
+
+  ngOnInit() {
+    this.tableState = this.tableService.createTableState<Employee>(
+      '/api/employees',
+      { page: 1, pageSize: 25, sortBy: 'name', sortDirection: 'asc' }
+    );
+  }
+
+  onSelectionChange(selected: Employee[]) {
+    this.toastService.showSuccess(`تم تحديد ${selected.length} موظف`);
+  }
+
+  onRowClick(employee: Employee) {
+    console.log('Row clicked:', employee);
+  }
+
+  viewEmployee(employee: Employee) {
+    // Navigate to detail view
+  }
+
+  editEmployee(employee: Employee) {
+    // Open edit dialog
+  }
+
+  deleteEmployee(employee: Employee) {
+    if (confirm(`حذف ${employee.name}?`)) {
+      // Call delete API
+      this.tableState.refresh();
+    }
+  }
+}
+```
+
 ## 🛠️ Custom Validators
 
 The template includes Kuwait-specific validators:
@@ -363,6 +807,21 @@ Loading state management (automatically handled by interceptor):
 loadingService.isLoading(); // Returns signal<boolean>
 ```
 
+### TableService
+
+Manages table state with API integration:
+
+```typescript
+// Create table state with API
+tableService.createTableState<T>(endpoint, initialParams);
+
+// Create table state with static data
+tableService.createStaticTableState<T>(data, initialParams);
+
+// Build HTTP params
+tableService.buildHttpParams(params);
+```
+
 ## 🚢 Deployment
 
 ### Azure DevOps Pipeline
@@ -416,7 +875,9 @@ npm run build -- --configuration=production
 }
 ```
 
-## 🧪 Example Page
+## 🧪 Example Pages
+
+### Showcase Page
 
 The template includes a comprehensive showcase page demonstrating all components. To view it:
 
@@ -430,6 +891,20 @@ The showcase includes:
 - All button states
 - Statistics cards
 - Form components with error handling
+
+### Employee List Page
+
+A complete example of the table component with:
+
+1. Navigate to `http://localhost:4200/employee-list`
+2. Features demonstrated:
+   - Pagination with customizable page sizes
+   - Column sorting
+   - Real-time search with Arabic support
+   - Row selection
+   - Row actions
+   - Loading states
+   - Static and dynamic data examples
 
 ## 🤝 Contributing
 
@@ -471,3 +946,6 @@ npm test
 - [ ] Test RTL/Arabic support
 - [ ] Configure navigation links
 - [ ] Set up routes with guards
+- [ ] Test table component with your data
+- [ ] Implement custom validators as needed
+- [ ] Configure toast notifications
