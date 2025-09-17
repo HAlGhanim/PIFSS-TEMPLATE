@@ -1,4 +1,3 @@
-export * from './alert/alert.component';
 export * from './button/button.component';
 export * from './card/card.component';
 export * from './date-picker/date-picker.component';
@@ -11,3 +10,4 @@ export * from './icons/pifss-logo/pifss-logo.component';
 export * from './navbar/navbar.component';
 export * from './page-header/page-header.component';
 export * from './report-container/report-container.component';
+export * from './toast/toast.component';

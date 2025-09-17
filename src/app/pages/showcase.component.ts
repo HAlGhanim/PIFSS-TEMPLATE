@@ -1,8 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
-  AlertComponent,
   ButtonComponent,
   CardComponent,
   DatePicker,
@@ -12,8 +11,8 @@ import {
   PageHeaderComponent,
   ReportContainerComponent,
 } from '../components';
+import { ToastService } from '../services';
 import { CustomValidators } from '../utils/validators';
-import { MessageService } from '../services';
 
 @Component({
   selector: 'app-showcase',
@@ -21,7 +20,6 @@ import { MessageService } from '../services';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    AlertComponent,
     ButtonComponent,
     CardComponent,
     DatePicker,
@@ -35,7 +33,7 @@ import { MessageService } from '../services';
 })
 export class ShowcaseComponent {
   private fb = inject(FormBuilder);
-  messageService = inject(MessageService);
+  public toastService = inject(ToastService);
 
   isSubmitting = signal(false);
   isDownloading = signal(false);
@@ -109,7 +107,7 @@ export class ShowcaseComponent {
       // Simulate API call
       setTimeout(() => {
         console.log('Form Data:', this.form.value);
-        this.messageService.showSuccess('تم إرسال النموذج بنجاح!');
+        this.toastService.showSuccess('تم إرسال النموذج بنجاح!');
         this.isSubmitting.set(false);
       }, 2000);
     } else {
@@ -117,7 +115,7 @@ export class ShowcaseComponent {
       Object.keys(this.form.controls).forEach((key) => {
         this.form.get(key)?.markAsTouched();
       });
-      this.messageService.showError('يرجى تصحيح الأخطاء في النموذج');
+      this.toastService.showError('يرجى تصحيح الأخطاء في النموذج');
     }
   }
 
@@ -126,13 +124,20 @@ export class ShowcaseComponent {
 
     // Simulate download
     setTimeout(() => {
-      this.messageService.showSuccess('تم تنزيل التقرير بنجاح!');
+      this.toastService.showSuccess('تم تنزيل التقرير بنجاح!');
       this.isDownloading.set(false);
     }, 1500);
   }
 
   onReset() {
     this.form.reset();
-    this.messageService.showSuccess('تم إعادة تعيين النموذج');
+    this.toastService.showSuccess('تم إعادة تعيين النموذج');
+  }
+
+  showToastExamples() {
+    this.toastService.showSuccess('مثال على رسالة نجاح');
+    setTimeout(() => {
+      this.toastService.showError('مثال على رسالة خطأ');
+    }, 1000);
   }
 }

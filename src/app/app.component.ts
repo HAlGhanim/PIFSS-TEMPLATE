@@ -2,12 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 // import { MsalAuthService } from './services';
-import { NavbarComponent } from './components';
+import { NavbarComponent, ToastComponent } from './components';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, CommonModule],
+  imports: [RouterOutlet, CommonModule, NavbarComponent, ToastComponent],
   templateUrl: './app.component.html',
 })
 export class AppComponent implements OnInit {

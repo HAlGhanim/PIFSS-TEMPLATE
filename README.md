@@ -171,6 +171,9 @@ links = [
 ];
 ```
 
+Navbar Example:
+![Screenshot](./src/assets/images/Navbar-example.png)
+
 ## 📦 Available Components
 
 ### Alert Component

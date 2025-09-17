@@ -3,28 +3,38 @@
     title="صفحة عرض المكونات - PIFSS Template Showcase"
   ></app-page-header>
 
-  <!-- Alert Examples -->
-  <app-card class="mb-6">
-    <div class="p-6">
-      <h2 class="text-xl font-bold mb-4 text-gray-800">التنبيهات - Alerts</h2>
+  <!-- Toast Examples -->
+  <app-card>
+    <div class="p-6 mb-6">
+      <h2 class="text-xl font-bold mb-4 text-gray-800">
+        التنبيهات - Toast Notifications
+      </h2>
 
-      <app-alert
-        [show]="true"
-        type="success"
-        message="تم إنشاء التقرير بنجاح! - Report generated successfully!"
-      ></app-alert>
+      <div class="flex gap-4 flex-wrap">
+        <button
+          (click)="toastService.showSuccess('تمت العملية بنجاح')"
+          class="btn-primary"
+        >
+          عرض رسالة نجاح
+        </button>
 
-      <app-alert
-        [show]="true"
-        type="error"
-        message="حدث خطأ في معالجة الطلب - Error processing request"
-      ></app-alert>
+        <button
+          (click)="toastService.showError('حدث خطأ في العملية')"
+          class="btn-secondary"
+        >
+          عرض رسالة خطأ
+        </button>
+
+        <button (click)="showToastExamples()" class="btn-secondary">
+          عرض أمثلة متعددة
+        </button>
+      </div>
     </div>
   </app-card>
 
   <!-- Form Example -->
-  <app-card class="mb-6">
-    <div class="p-6">
+  <app-card>
+    <div class="p-6 mb-6">
       <h2 class="text-xl font-bold mb-4 text-gray-800">
         نموذج البيانات - Data Form
       </h2>
@@ -133,14 +143,14 @@
           <!-- Phone Field -->
           <app-form-field
             label="رقم الهاتف"
-            hint="مثال: 99887766"
+            hint="مثال: 99999999"
             [showError]="hasError('phone')"
             [errorMessage]="getErrorMessage('phone')"
           >
             <app-form-input
               formControlName="phone"
               type="tel"
-              placeholder="99887766"
+              placeholder="99999999"
             ></app-form-input>
           </app-form-field>
         </div>
@@ -280,13 +290,4 @@
       </div>
     </app-card>
   </div>
-
-  <!-- Message Display -->
-  @if (messageService.isVisible()) {
-  <app-alert
-    [show]="true"
-    [type]="messageService.messageType()"
-    [message]="messageService.messageText()"
-  ></app-alert>
-  }
 </app-report-container>
