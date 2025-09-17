@@ -15,8 +15,16 @@ export const routes: Routes = [
     // canActivate: [MsalGuard],
     // calling component this way for lazy loading
     loadComponent: () =>
-      import('../app/pages/showcase.component').then(
+      import('./pages/showcase/showcase.component').then(
         (m) => m.ShowcaseComponent
+      ),
+  },
+  {
+    path: 'employee-list',
+    title: 'Employee list',
+    loadComponent: () =>
+      import('./pages/employee-list/employee-list.component').then(
+        (m) => m.EmployeeListComponent
       ),
   },
 ];

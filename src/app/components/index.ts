@@ -11,3 +11,4 @@ export * from './navbar/navbar.component';
 export * from './page-header/page-header.component';
 export * from './report-container/report-container.component';
 export * from './toast/toast.component';
+export * from './table/table.component';

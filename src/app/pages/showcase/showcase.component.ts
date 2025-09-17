@@ -10,9 +10,9 @@ import {
   FormSelectGroupComponent,
   PageHeaderComponent,
   ReportContainerComponent,
-} from '../components';
-import { ToastService } from '../services';
-import { CustomValidators } from '../utils/validators';
+} from '../../components';
+import { ToastService } from '../../services';
+import { CustomValidators } from '../../utils/validators';
 
 @Component({
   selector: 'app-showcase',

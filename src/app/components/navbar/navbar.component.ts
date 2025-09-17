@@ -47,6 +47,11 @@ export class NavbarComponent {
       path: '/showcase',
       icon: 'WHATEVER',
     },
+    {
+      label: 'employee list',
+      path: '/employee-list',
+      icon: 'WHATEVER2',
+    },
   ];
 
   logout() {

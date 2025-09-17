@@ -1,0 +1,358 @@
+<div class="bg-white rounded-lg shadow overflow-hidden">
+  <!-- Header with Search and Actions -->
+  <div class="px-6 py-4 border-b border-gray-200">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+    >
+      <!-- Search Box -->
+      @if (searchable()) {
+      <div class="flex-1 max-w-md">
+        <div class="relative">
+          <input
+            type="text"
+            [formControl]="searchControl"
+            placeholder="بحث..."
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+          />
+          <div
+            class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Refresh Button -->
+      <button
+        (click)="onRefresh()"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      >
+        <svg
+          class="w-4 h-4 ml-2"
+          [class.spinner]="loading()"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
+        </svg>
+        تحديث
+      </button>
+    </div>
+
+    <!-- Results Count -->
+    @if (totalItems() > 0) {
+    <div class="mt-3 text-sm text-gray-600">
+      عرض {{ startItem() }} إلى {{ endItem() }} من {{ totalItems() }} نتيجة
+    </div>
+    }
+  </div>
+
+  <!-- Table -->
+  <div class="relative">
+    <!-- Loading Overlay -->
+    @if (loading()) {
+    <div class="loading-overlay">
+      <svg
+        class="spinner w-8 h-8 text-primary"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+    </div>
+    }
+
+    <div class="table-container">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <!-- Checkbox Column -->
+            @if (selectable()) {
+            <th class="checkbox-cell px-3 py-3">
+              <input
+                type="checkbox"
+                [checked]="allRowsSelected()"
+                (change)="onSelectAll($event)"
+                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+              />
+            </th>
+            }
+
+            <!-- Data Columns -->
+            @for (column of columns(); track column.key) {
+            <th
+              [style.width]="column.width"
+              class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider"
+              [ngClass]="[
+                getTextAlign(column),
+                column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
+              ]"
+              (click)="onSort(column)"
+            >
+              <div
+                class="flex items-center gap-1"
+                [ngClass]="{
+                  'justify-start': column.align === 'left',
+                  'justify-center': column.align === 'center',
+                  'justify-end': column.align === 'right' || !column.align
+                }"
+              >
+                <span>{{ column.label }}</span>
+                @if (column.sortable) {
+                <svg
+                  class="w-4 h-4 sort-icon transition-transform"
+                  [class.asc]="
+                    sortBy() === column.key && sortDirection() === 'asc'
+                  "
+                  [class.text-primary]="sortBy() === column.key"
+                  [class.text-gray-400]="sortBy() !== column.key"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+                }
+              </div>
+            </th>
+            }
+
+            <!-- Actions Column -->
+            @if (actions().length > 0) {
+            <th
+              class="action-cell px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-center"
+            >
+              الإجراءات
+            </th>
+            }
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          @if (data().length === 0) {
+          <tr>
+            <td
+              [colspan]="
+                columns().length +
+                (selectable() ? 1 : 0) +
+                (actions().length > 0 ? 1 : 0)
+              "
+              class="px-6 py-12 text-center"
+            >
+              <div class="flex flex-col items-center">
+                <svg
+                  class="w-12 h-12 text-gray-400 mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span class="text-gray-500">{{ emptyMessage() }}</span>
+              </div>
+            </td>
+          </tr>
+          } @else { @for (row of data(); track trackByRow($index, row)) {
+          <tr
+            [class.cursor-pointer]="rowClickable()"
+            [class.bg-blue-50]="isSelected(row)"
+            (click)="onRowClick(row)"
+            class="hover:bg-gray-50"
+          >
+            <!-- Checkbox Cell -->
+            @if (selectable()) {
+            <td class="px-3 py-4 text-center">
+              <input
+                type="checkbox"
+                [checked]="isSelected(row)"
+                (click)="onRowSelect(row, $event)"
+                (change)="$event.stopPropagation()"
+                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+              />
+            </td>
+            }
+
+            <!-- Data Cells -->
+            @for (column of columns(); track column.key) {
+            <td
+              class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 text-right"
+            >
+              @if (column.customTemplate) {
+              <ng-container
+                [ngTemplateOutlet]="column.customTemplate"
+                [ngTemplateOutletContext]="{
+                  $implicit: row,
+                  value: row[column.key]
+                }"
+              ></ng-container>
+              } @else { @switch (column.type) { @case ('boolean') {
+              <span
+                class="inline-flex px-2 py-1 text-xs font-medium rounded-full"
+                [ngClass]="{
+                  'bg-green-100 text-green-800': row[column.key],
+                  'bg-red-100 text-red-800': !row[column.key]
+                }"
+              >
+                {{ formatCellValue(column, row[column.key]) }}
+              </span>
+              } @default {
+              <span>{{ formatCellValue(column, row[column.key]) }}</span>
+              } } }
+            </td>
+            }
+
+            <!-- Actions Cell -->
+            @if (actions().length > 0) {
+            <td class="action-cell px-3 py-4 text-center">
+              <div class="flex items-center justify-center gap-2">
+                @for (action of actions(); track action.label) { @if
+                (!action.condition || action.condition(row)) {
+                <button
+                  (click)="action.handler(row); $event.stopPropagation()"
+                  class="text-sm font-medium transition-colors"
+                  [ngClass]="
+                    action.class || 'text-primary hover:text-primary/80'
+                  "
+                  [title]="action.label"
+                >
+                  @if (action.icon) {
+                  <span [innerHTML]="action.icon"></span>
+                  } @else {
+                  {{ action.label }}
+                  }
+                </button>
+                } }
+              </div>
+            </td>
+            }
+          </tr>
+          } }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Footer with Pagination -->
+  <div class="px-6 py-4 border-t border-gray-200">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <!-- Page Size Selector -->
+      <div class="flex items-center gap-2">
+        <label for="pageSize" class="text-sm text-gray-700">عرض:</label>
+        <select
+          id="pageSize"
+          [ngModel]="pageSize()"
+          (ngModelChange)="onPageSizeChangeValue($event)"
+          class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+        >
+          @for (size of pageSizeOptions(); track size) {
+          <option [value]="size">{{ size }}</option>
+          }
+        </select>
+        <span class="text-sm text-gray-700">لكل صفحة</span>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="flex items-center gap-1">
+        <!-- Previous Button -->
+        <button
+          (click)="onPageChange(currentPage() - 1)"
+          [disabled]="currentPage() === 1"
+          class="pagination-button px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+
+        <!-- Page Numbers -->
+        @for (page of pageNumbers(); track $index) { @if (page === '...') {
+        <span class="px-3 py-2 text-sm text-gray-700">...</span>
+        } @else {
+        <button
+          (click)="onPageChange(page)"
+          [class.bg-primary]="page === currentPage()"
+          [class.text-white]="page === currentPage()"
+          [class.bg-white]="page !== currentPage()"
+          [class.text-gray-700]="page !== currentPage()"
+          [class.hover:bg-gray-50]="page !== currentPage()"
+          class="pagination-button px-3 py-2 text-sm font-medium border border-gray-300"
+        >
+          {{ page }}
+        </button>
+        } }
+
+        <!-- Next Button -->
+        <button
+          (click)="onPageChange(currentPage() + 1)"
+          [disabled]="currentPage() === totalPages()"
+          class="pagination-button px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
