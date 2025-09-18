@@ -9,7 +9,7 @@ import {
   FormInputComponent,
   FormSelectGroupComponent,
   PageHeaderComponent,
-  ReportContainerComponent,
+  ContainerComponent,
 } from '../../components';
 import { ToastService } from '../../services';
 import { CustomValidators } from '../../utils/validators';
@@ -27,7 +27,7 @@ import { CustomValidators } from '../../utils/validators';
     FormInputComponent,
     FormSelectGroupComponent,
     PageHeaderComponent,
-    ReportContainerComponent,
+    ContainerComponent,
   ],
   templateUrl: `./showcase.component.html`,
 })

@@ -9,6 +9,6 @@ export * from './icons/pifss-logo-v/pifss-logo-v.component';
 export * from './icons/pifss-logo/pifss-logo.component';
 export * from './navbar/navbar.component';
 export * from './page-header/page-header.component';
-export * from './report-container/report-container.component';
+export * from './container/container.component';
 export * from './toast/toast.component';
 export * from './table/table.component';
