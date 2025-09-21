@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
+import { extractValidationErrors } from '../utils';
 
 export const ErrorInterceptor: HttpInterceptorFn = (req, next) => {
   const snackBar = inject(MatSnackBar);

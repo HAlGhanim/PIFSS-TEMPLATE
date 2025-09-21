@@ -1,4 +1,4 @@
-function extractValidationErrors(details: any): string {
+export function extractValidationErrors(details: any): string {
   if (typeof details === 'string') {
     return details;
   }

@@ -12,7 +12,7 @@ import {
   ContainerComponent,
 } from '../../components';
 import { ToastService } from '../../services';
-import { CustomValidators } from '../../utils/validators';
+import { CustomValidators } from '../../utils';
 
 @Component({
   selector: 'app-showcase',
