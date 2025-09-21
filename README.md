@@ -23,6 +23,7 @@ A modern, production-ready Angular 20 template specifically designed for the Pub
 - ✅ **Loading States** - Automatic loading indicators for HTTP requests
 - ✅ **Toast Notifications** - Clean toast notification system
 - ✅ **File Download Service** - Utility for handling file downloads
+- ✅ **Smart Caching System** - Automatic 30-second caching for GET requests
 - ✅ **Responsive Design** - Mobile-first approach with Tailwind CSS
 - ✅ **Azure DevOps Ready** - Pre-configured pipeline YAML
 
@@ -54,6 +55,7 @@ src/
 │   │   └── loading.interceptor.ts  # Loading state management
 │   │
 │   ├── interfaces/           # TypeScript interfaces
+│   │   ├── cache/            # Cache interfaces
 │   │   ├── select/           # Select component interfaces
 │   │   ├── table/            # Table component interfaces
 │   │   └── toast/            # Toast notification interfaces
@@ -73,6 +75,7 @@ src/
 │   │       └── toast.service.ts    # Toast notification service
 │   │
 │   ├── utils/                # Utility functions
+│   │   ├── CacheUtils.class.ts     # Cache management utilities
 │   │   ├── DateUtils.class.ts      # Date manipulation utilities
 │   │   ├── apiValidationError.ts   # API error parsing
 │   │   └── validators.ts           # Custom form validators
@@ -233,6 +236,127 @@ links = [
 Navbar Example:
 ![Screenshot](./src/assets/images/Navbar-example.png)
 
+## 💾 Caching System
+
+The template includes an intelligent caching system that automatically caches GET requests for 30 seconds to improve performance and reduce server load.
+
+### Features
+
+- **Automatic Caching** - All GET requests are cached for 30 seconds by default
+- **Smart Invalidation** - Cache automatically invalidates when data is modified (POST/PUT/DELETE)
+- **Memory Management** - Automatic cleanup of expired cache entries
+- **Development Tools** - Built-in debugging and cache statistics
+- **Configurable** - Easy to enable/disable and adjust cache duration
+
+### How It Works
+
+The caching system is implemented in the `BaseService` class and uses RxJS observables with `shareReplay` to prevent duplicate requests:
+
+```typescript
+// All GET requests are automatically cached
+this.baseService.get("/api/employees"); // First call - hits server
+this.baseService.get("/api/employees"); // Within 30 seconds - returns cached data
+```
+
+### Cache Management
+
+#### Manually Clear Cache
+
+```typescript
+// Clear all cache
+this.baseService.clearCache();
+
+// Clear cache for specific URL
+this.baseService.clearCacheForUrl("/api/employees");
+
+// Clear cache for resource type
+this.baseService.invalidateCacheForResource("employees");
+```
+
+#### Disable Caching
+
+You can temporarily disable caching for debugging:
+
+```typescript
+// Via localStorage (persistent)
+localStorage.setItem("disableCache", "true");
+
+// Via URL parameter (temporary)
+//localhost:4200?noCache=true
+
+// Get fresh data regardless of cache
+http: this.baseService.getFresh("/api/employees");
+```
+
+#### Cache Statistics
+
+Monitor cache performance in development:
+
+```typescript
+const stats = this.baseService.getCacheStats();
+console.log(stats);
+// Output: { size: 5, validCount: 3, expiredCount: 2, entries: [...] }
+```
+
+### Cache Configuration
+
+The cache duration is set to 30 seconds by default. To modify:
+
+```typescript
+// In CacheUtils.class.ts
+private static readonly CACHE_DURATION_MS = 30000; // 30 seconds
+```
+
+### Debugging
+
+Enable verbose logging in development:
+
+```typescript
+// Enable cache logging
+localStorage.setItem("verboseLogging", "true");
+```
+
+This will log cache events in the console:
+
+- `[Cache Hit]` - Data served from cache
+- `[Cache Miss]` - Data fetched from server
+- `[Cache Store]` - Data stored in cache
+- `[Cache Invalidate]` - Cache entry removed
+
+### Best Practices
+
+1. **Don't cache sensitive data** - User-specific or frequently changing data should use `getFresh()`
+2. **Use appropriate cache duration** - 30 seconds works well for most cases
+3. **Monitor cache size** - Use `getCacheStats()` in development to ensure cache doesn't grow too large
+4. **Test with cache disabled** - Always test your application with `?noCache=true` to ensure it works without caching
+
+### Example Usage
+
+```typescript
+export class EmployeeService extends BaseService {
+  // Automatically cached for 30 seconds
+  getEmployees() {
+    return this.get<Employee[]>("/api/employees");
+  }
+
+  // Cache automatically invalidated after update
+  updateEmployee(id: number, data: Employee) {
+    return this.put(`/api/employees/${id}`, data);
+  }
+
+  // Force fresh data (no cache)
+  getEmployeeFresh(id: number) {
+    return this.getFresh<Employee>(`/api/employees/${id}`);
+  }
+
+  // Manual cache management
+  refreshEmployeeData() {
+    this.clearCacheForUrl("/api/employees");
+    return this.getEmployees();
+  }
+}
+```
+
 ## 📦 Available Components
 
 ### Toast Notifications
@@ -337,20 +461,7 @@ columns: TableColumn[] = [
 ```
 
 ```html
-<app-table
-  [columns]="columns"
-  [data]="tableData"
-  [totalItems]="totalItems"
-  [loading]="isLoading"
-  [selectable]="true"
-  [searchable]="true"
-  (pageChange)="onPageChange($event)"
-  (pageSizeChange)="onPageSizeChange($event)"
-  (sortChange)="onSortChange($event)"
-  (searchChange)="onSearchChange($event)"
-  (selectionChange)="onSelectionChange($event)"
-  (refresh)="onRefresh()"
-/>
+<app-table [columns]="columns" [data]="tableData" [totalItems]="totalItems" [loading]="isLoading" [selectable]="true" [searchable]="true" (pageChange)="onPageChange($event)" (pageSizeChange)="onPageSizeChange($event)" (sortChange)="onSortChange($event)" (searchChange)="onSearchChange($event)" (selectionChange)="onSelectionChange($event)" (refresh)="onRefresh()" />
 ```
 
 ### Table Configuration
@@ -359,44 +470,44 @@ columns: TableColumn[] = [
 
 ```typescript
 interface TableColumn {
-  key: string;                    // Data property key
-  label: string;                   // Column header label
-  sortable?: boolean;              // Enable sorting (default: false)
-  width?: string;                  // Column width (e.g., '150px')
-  align?: 'left' | 'center' | 'right'; // Text alignment
-  type?: 'text' | 'number' | 'date' | 'currency' | 'boolean' | 'custom';
+  key: string; // Data property key
+  label: string; // Column header label
+  sortable?: boolean; // Enable sorting (default: false)
+  width?: string; // Column width (e.g., '150px')
+  align?: "left" | "center" | "right"; // Text alignment
+  type?: "text" | "number" | "date" | "currency" | "boolean" | "custom";
   format?: (value: any) => string; // Custom formatter function
-  customTemplate?: any;            // Custom Angular template
+  customTemplate?: any; // Custom Angular template
 }
 ```
 
 #### Table Inputs
 
-| Input | Type | Default | Description |
-|-------|------|---------|-------------|
-| `columns` | `TableColumn[]` | Required | Column definitions |
-| `data` | `any[]` | Required | Data to display |
-| `totalItems` | `number` | 0 | Total number of items (for pagination) |
-| `loading` | `boolean` | false | Show loading overlay |
-| `selectable` | `boolean` | false | Enable row selection |
-| `searchable` | `boolean` | true | Show search box |
-| `rowClickable` | `boolean` | false | Enable row click events |
-| `actions` | `TableAction[]` | [] | Row action buttons |
-| `pageSizeOptions` | `number[]` | [10, 25, 50, 100] | Page size options |
-| `initialPageSize` | `number` | 10 | Initial page size |
-| `emptyMessage` | `string` | 'لا توجد بيانات للعرض' | Message when no data |
+| Input             | Type            | Default                | Description                            |
+| ----------------- | --------------- | ---------------------- | -------------------------------------- |
+| `columns`         | `TableColumn[]` | Required               | Column definitions                     |
+| `data`            | `any[]`         | Required               | Data to display                        |
+| `totalItems`      | `number`        | 0                      | Total number of items (for pagination) |
+| `loading`         | `boolean`       | false                  | Show loading overlay                   |
+| `selectable`      | `boolean`       | false                  | Enable row selection                   |
+| `searchable`      | `boolean`       | true                   | Show search box                        |
+| `rowClickable`    | `boolean`       | false                  | Enable row click events                |
+| `actions`         | `TableAction[]` | []                     | Row action buttons                     |
+| `pageSizeOptions` | `number[]`      | [10, 25, 50, 100]      | Page size options                      |
+| `initialPageSize` | `number`        | 10                     | Initial page size                      |
+| `emptyMessage`    | `string`        | 'لا توجد بيانات للعرض' | Message when no data                   |
 
 #### Table Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| `pageChange` | `number` | Fired when page changes |
-| `pageSizeChange` | `number` | Fired when page size changes |
-| `sortChange` | `{sortBy: string, sortDirection: 'asc' \| 'desc'}` | Fired on sort |
-| `searchChange` | `string` | Fired on search (debounced 500ms) |
-| `selectionChange` | `any[]` | Fired when selection changes |
-| `rowClick` | `any` | Fired when row is clicked |
-| `refresh` | `void` | Fired when refresh button clicked |
+| Output            | Type                                               | Description                       |
+| ----------------- | -------------------------------------------------- | --------------------------------- |
+| `pageChange`      | `number`                                           | Fired when page changes           |
+| `pageSizeChange`  | `number`                                           | Fired when page size changes      |
+| `sortChange`      | `{sortBy: string, sortDirection: 'asc' \| 'desc'}` | Fired on sort                     |
+| `searchChange`    | `string`                                           | Fired on search (debounced 500ms) |
+| `selectionChange` | `any[]`                                            | Fired when selection changes      |
+| `rowClick`        | `any`                                              | Fired when row is clicked         |
+| `refresh`         | `void`                                             | Fired when refresh button clicked |
 
 ### Advanced Table Features
 
@@ -446,9 +557,7 @@ columns: TableColumn[] = [
 ```html
 <!-- Define the template -->
 <ng-template #statusTemplate let-row let-value="value">
-  <span class="badge" [class.badge-success]="value === 'active'">
-    {{ value }}
-  </span>
+  <span class="badge" [class.badge-success]="value === 'active'"> {{ value }} </span>
 </ng-template>
 ```
 
@@ -486,7 +595,7 @@ The template includes a `TableService` for managing table state with API integra
 #### With API Data
 
 ```typescript
-import { TableService } from './services';
+import { TableService } from "./services";
 
 export class EmployeeListComponent implements OnInit {
   tableState!: TableStateManager<Employee>;
@@ -495,15 +604,12 @@ export class EmployeeListComponent implements OnInit {
 
   ngOnInit() {
     // Create managed table state with automatic API calls
-    this.tableState = this.tableService.createTableState<Employee>(
-      '/api/employees',
-      {
-        page: 1,
-        pageSize: 10,
-        sortBy: 'name',
-        sortDirection: 'asc'
-      }
-    );
+    this.tableState = this.tableService.createTableState<Employee>("/api/employees", {
+      page: 1,
+      pageSize: 10,
+      sortBy: "name",
+      sortDirection: "asc",
+    });
   }
 
   // Event handlers
@@ -515,7 +621,7 @@ export class EmployeeListComponent implements OnInit {
     this.tableState.setPageSize(pageSize);
   }
 
-  onSortChange(sort: { sortBy: string; sortDirection: 'asc' | 'desc' }) {
+  onSortChange(sort: { sortBy: string; sortDirection: "asc" | "desc" }) {
     this.tableState.setSort(sort.sortBy, sort.sortDirection);
   }
 
@@ -531,17 +637,7 @@ export class EmployeeListComponent implements OnInit {
 
 ```html
 <!-- Template with observables -->
-<app-table
-  [columns]="columns"
-  [data]="(tableState.data$ | async) || []"
-  [totalItems]="(tableState.totalItems$ | async) || 0"
-  [loading]="(tableState.loading$ | async) || false"
-  (pageChange)="onPageChange($event)"
-  (pageSizeChange)="onPageSizeChange($event)"
-  (sortChange)="onSortChange($event)"
-  (searchChange)="onSearchChange($event)"
-  (refresh)="onRefresh()"
-/>
+<app-table [columns]="columns" [data]="(tableState.data$ | async) || []" [totalItems]="(tableState.totalItems$ | async) || 0" [loading]="(tableState.loading$ | async) || false" (pageChange)="onPageChange($event)" (pageSizeChange)="onPageSizeChange($event)" (sortChange)="onSortChange($event)" (searchChange)="onSearchChange($event)" (refresh)="onRefresh()" />
 ```
 
 #### With Static Data
@@ -572,15 +668,15 @@ ngOnInit() {
 
 ```typescript
 interface TableStateManager<T> {
-  data$: Observable<T[]>;              // Table data
-  totalItems$: Observable<number>;      // Total item count
-  loading$: Observable<boolean>;        // Loading state
-  error$: Observable<string | null>;   // Error messages
+  data$: Observable<T[]>; // Table data
+  totalItems$: Observable<number>; // Total item count
+  loading$: Observable<boolean>; // Loading state
+  error$: Observable<string | null>; // Error messages
   currentState$: Observable<TableQueryParams>; // Current parameters
 
   setPage(page: number): void;
   setPageSize(pageSize: number): void;
-  setSort(sortBy: string, direction: 'asc' | 'desc'): void;
+  setSort(sortBy: string, direction: "asc" | "desc"): void;
   setSearch(search: string): void;
   setFilters(filters: Record<string, any>): void;
   refresh(): void;
@@ -594,11 +690,11 @@ The table expects paginated API responses in this format:
 
 ```typescript
 interface PaginatedResponse<T> {
-  data: T[];           // Array of items
-  totalItems: number;  // Total count for pagination
+  data: T[]; // Array of items
+  totalItems: number; // Total count for pagination
   currentPage: number; // Current page number
-  pageSize: number;    // Items per page
-  totalPages: number;  // Total number of pages
+  pageSize: number; // Items per page
+  totalPages: number; // Total number of pages
 }
 ```
 
@@ -615,9 +711,9 @@ The table includes built-in Arabic text normalization for better search results:
 
 ```typescript
 // employee-list.component.ts
-import { Component, OnInit, inject } from '@angular/core';
-import { TableService, ToastService } from '../../services';
-import { TableColumn, TableAction, TableStateManager } from '../../interfaces';
+import { Component, OnInit, inject } from "@angular/core";
+import { TableService, ToastService } from "../../services";
+import { TableColumn, TableAction, TableStateManager } from "../../interfaces";
 
 interface Employee {
   id: number;
@@ -630,28 +726,8 @@ interface Employee {
 }
 
 @Component({
-  selector: 'app-employee-list',
-  template: `
-    <app-table
-      [columns]="columns"
-      [data]="(tableState.data$ | async) || []"
-      [totalItems]="(tableState.totalItems$ | async) || 0"
-      [loading]="(tableState.loading$ | async) || false"
-      [selectable]="true"
-      [searchable]="true"
-      [rowClickable]="true"
-      [actions]="actions"
-      [initialPageSize]="25"
-      [pageSizeOptions]="[10, 25, 50, 100]"
-      (pageChange)="tableState.setPage($event)"
-      (pageSizeChange)="tableState.setPageSize($event)"
-      (sortChange)="tableState.setSort($event.sortBy, $event.sortDirection)"
-      (searchChange)="tableState.setSearch($event)"
-      (selectionChange)="onSelectionChange($event)"
-      (rowClick)="onRowClick($event)"
-      (refresh)="tableState.refresh()"
-    />
-  `
+  selector: "app-employee-list",
+  template: ` <app-table [columns]="columns" [data]="(tableState.data$ | async) || []" [totalItems]="(tableState.totalItems$ | async) || 0" [loading]="(tableState.loading$ | async) || false" [selectable]="true" [searchable]="true" [rowClickable]="true" [actions]="actions" [initialPageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]" (pageChange)="tableState.setPage($event)" (pageSizeChange)="tableState.setPageSize($event)" (sortChange)="tableState.setSort($event.sortBy, $event.sortDirection)" (searchChange)="tableState.setSearch($event)" (selectionChange)="onSelectionChange($event)" (rowClick)="onRowClick($event)" (refresh)="tableState.refresh()" /> `,
 })
 export class EmployeeListComponent implements OnInit {
   private tableService = inject(TableService);
@@ -660,37 +736,34 @@ export class EmployeeListComponent implements OnInit {
   tableState!: TableStateManager<Employee>;
 
   columns: TableColumn[] = [
-    { key: 'civilId', label: 'الرقم المدني', sortable: true },
-    { key: 'name', label: 'الاسم', sortable: true },
-    { key: 'department', label: 'القسم', sortable: true },
-    { key: 'salary', label: 'الراتب', type: 'currency', sortable: true },
-    { key: 'joinDate', label: 'تاريخ الالتحاق', type: 'date', sortable: true },
-    { key: 'isActive', label: 'الحالة', type: 'boolean', sortable: true }
+    { key: "civilId", label: "الرقم المدني", sortable: true },
+    { key: "name", label: "الاسم", sortable: true },
+    { key: "department", label: "القسم", sortable: true },
+    { key: "salary", label: "الراتب", type: "currency", sortable: true },
+    { key: "joinDate", label: "تاريخ الالتحاق", type: "date", sortable: true },
+    { key: "isActive", label: "الحالة", type: "boolean", sortable: true },
   ];
 
   actions: TableAction[] = [
     {
-      label: 'عرض',
+      label: "عرض",
       handler: (row) => this.viewEmployee(row),
-      class: 'text-blue-600'
+      class: "text-blue-600",
     },
     {
-      label: 'تعديل',
+      label: "تعديل",
       handler: (row) => this.editEmployee(row),
-      condition: (row) => row.isActive
+      condition: (row) => row.isActive,
     },
     {
-      label: 'حذف',
+      label: "حذف",
       handler: (row) => this.deleteEmployee(row),
-      class: 'text-red-600'
-    }
+      class: "text-red-600",
+    },
   ];
 
   ngOnInit() {
-    this.tableState = this.tableService.createTableState<Employee>(
-      '/api/employees',
-      { page: 1, pageSize: 25, sortBy: 'name', sortDirection: 'asc' }
-    );
+    this.tableState = this.tableService.createTableState<Employee>("/api/employees", { page: 1, pageSize: 25, sortBy: "name", sortDirection: "asc" });
   }
 
   onSelectionChange(selected: Employee[]) {
@@ -698,7 +771,7 @@ export class EmployeeListComponent implements OnInit {
   }
 
   onRowClick(employee: Employee) {
-    console.log('Row clicked:', employee);
+    console.log("Row clicked:", employee);
   }
 
   viewEmployee(employee: Employee) {
@@ -820,6 +893,33 @@ tableService.createStaticTableState<T>(data, initialParams);
 
 // Build HTTP params
 tableService.buildHttpParams(params);
+```
+
+### BaseService
+
+Base service for API communication with automatic caching:
+
+```typescript
+// GET request (automatically cached for 30 seconds)
+baseService.get<T>(url, headers, params);
+
+// GET fresh data (bypass cache)
+baseService.getFresh<T>(url, headers, params);
+
+// POST request (invalidates related cache)
+baseService.post<T>(url, body, headers, params);
+
+// PUT request (invalidates related cache)
+baseService.put<T>(url, body, headers, params);
+
+// DELETE request (invalidates related cache)
+baseService.delete<T>(url, headers, params);
+
+// Cache management
+baseService.clearCache();
+baseService.clearCacheForUrl(url);
+baseService.invalidateCacheForResource(resourceType);
+baseService.getCacheStats();
 ```
 
 ## 🚢 Deployment
@@ -949,3 +1049,4 @@ npm test
 - [ ] Test table component with your data
 - [ ] Implement custom validators as needed
 - [ ] Configure toast notifications
+- [ ] Test caching functionality with your API
