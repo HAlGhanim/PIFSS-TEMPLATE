@@ -1,12 +1,12 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { extractValidationErrors } from '../utils';
+import { ToastService } from '../services';
 
 export const ErrorInterceptor: HttpInterceptorFn = (req, next) => {
-  const snackBar = inject(MatSnackBar);
+  const toastService = inject(ToastService);
   const router = inject(Router);
 
   const silentErrors = [
@@ -90,13 +90,8 @@ export const ErrorInterceptor: HttpInterceptorFn = (req, next) => {
           }
       }
 
-      snackBar.open(errorMessage, 'إغلاق', {
-        duration: error.status === 401 ? 10000 : 5000,
-        panelClass: ['error-snackbar'],
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        direction: 'rtl',
-      });
+      const errorDuration = error.status === 401 ? 10000 : 5000;
+      toastService.showError(errorMessage, errorDuration);
 
       return throwError(() => ({
         status: error.status,
