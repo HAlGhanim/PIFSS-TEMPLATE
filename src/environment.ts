@@ -2,14 +2,8 @@ export const environment = {
   production: false,
   baseurl: '', // this can be your backend localhost or a deployed backend up to you
   msal: {
-    local: {
-      // 4200 is the default localhost for angular
-      redirectUri: 'http://localhost:4200',
-    },
-    dev: {
-      // deployed iis express link for frontend (starts with 192.168). Should also be https so MSAL authentication works
-      redirectUri: '',
-    },
+    // 4200 is the default localhost for angular
+    redirectUri: 'http://localhost:4200',
     entraId: {
       // You should get the clientId from the infrastructure team specifically Nidheesh Nattiala
       clientId: 'ADD-YOUR-OWN',

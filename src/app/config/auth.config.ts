@@ -12,19 +12,12 @@ import { environment } from '../../environment';
 
 const DEFAULT_SCOPES = environment.msal.entraId.apiScopes;
 
-function getRedirectUri(): string {
-  const isLocalhost = window.location.hostname === 'localhost';
-  return isLocalhost
-    ? environment.msal.local.redirectUri
-    : environment.msal.dev.redirectUri;
-}
-
 export const msalConfig = {
   auth: {
     clientId: environment.msal.entraId.clientId,
     authority: environment.msal.entraId.authority,
-    redirectUri: getRedirectUri(),
-    postLogoutRedirectUri: getRedirectUri(),
+    redirectUri: environment.msal.redirectUri,
+    postLogoutRedirectUri: environment.msal.redirectUri,
     navigateToLoginRequestUrl: true,
   },
   cache: {
