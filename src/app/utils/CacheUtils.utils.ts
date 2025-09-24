@@ -1,16 +1,16 @@
 import { environment } from '../../environment';
 import { CacheEntry } from '../interfaces';
+import { CacheKeyPatterns } from './cache-key-builder.utils';
 
 export class CacheUtils {
   private static readonly CACHE_DURATION_MS = 30000; // 30 seconds
 
   /**
    * Create a unique cache key based on URL and parameters
+   * Now uses CacheKeyBuilder for consistency
    */
   static createCacheKey(url: string, headers?: any, params?: any): string {
-    const headersStr = headers ? JSON.stringify(headers) : '';
-    const paramsStr = params ? JSON.stringify(params) : '';
-    return `${url}::${headersStr}::${paramsStr}`;
+    return CacheKeyPatterns.forApiCall(url, params, headers);
   }
 
   /**
@@ -243,21 +243,37 @@ export class CacheUtils {
 
   /**
    * Create a cache key for a specific resource type
-   * Useful for creating consistent keys across the application
+   * Now uses CacheKeyBuilder
    */
   static createResourceCacheKey(
     resourceType: string,
     id?: string | number,
     params?: any
   ): string {
-    let key = `resource::${resourceType}`;
-    if (id !== undefined) {
-      key += `::${id}`;
-    }
-    if (params) {
-      key += `::${JSON.stringify(params)}`;
-    }
-    return key;
+    return CacheKeyPatterns.forResource(resourceType, id, params);
+  }
+
+  /**
+   * Create table cache key with all parameters
+   */
+  static createTableCacheKey(
+    endpoint: string,
+    page: number = 1,
+    pageSize: number = 10,
+    sortBy?: string,
+    sortDirection?: 'asc' | 'desc',
+    search?: string,
+    filters?: Record<string, any>
+  ): string {
+    return CacheKeyPatterns.forTableData(
+      endpoint,
+      page,
+      pageSize,
+      sortBy,
+      sortDirection,
+      search,
+      filters
+    );
   }
 
   /**

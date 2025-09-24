@@ -3,7 +3,12 @@ import { CommonModule } from '@angular/common';
 import { TableComponent } from '../../components';
 import { BaseService, TableService, ToastService } from '../../services';
 import { TableAction, TableColumn, TableStateManager } from '../../interfaces';
-import { DateUtils, CacheUtils } from '../../utils';
+import {
+  DateUtils,
+  CacheUtils,
+  TableColumnsBuilder,
+  TableColumnFactory,
+} from '../../utils';
 
 // Example data interface
 interface Employee {
@@ -33,77 +38,32 @@ export class EmployeeListComponent implements OnInit {
   tableState!: TableStateManager<Employee>;
 
   // Table columns configuration
-  columns: TableColumn[] = [
-    {
-      key: 'civilId',
-      label: 'الرقم المدني',
-      sortable: true,
-      width: '130px',
-    },
-    {
-      key: 'name',
-      label: 'الاسم',
-      sortable: true,
-      width: '180px',
-    },
-    {
-      key: 'department',
-      label: 'القسم',
-      sortable: true,
-      width: '150px',
-    },
-    {
-      key: 'position',
-      label: 'المنصب',
-      sortable: false,
-      width: '150px',
-    },
-    {
-      key: 'salary',
-      label: 'الراتب',
-      sortable: true,
-      type: 'currency',
-      width: '120px',
-    },
-    {
-      key: 'joinDate',
-      label: 'تاريخ الالتحاق',
-      sortable: true,
-      type: 'date',
-      width: '120px',
-      // Using DateUtils for custom formatting
-      format: (value: string) => DateUtils.toDisplayString(value, 'en-US'),
-    },
-    {
-      key: 'isActive',
-      label: 'الحالة',
-      sortable: true,
-      type: 'boolean',
-      width: '80px',
-    },
-  ];
+  columns: TableColumn[] = TableColumnsBuilder.create<Employee>()
+    .addCustom('civilId', 'الرقم المدني', (builder) =>
+      builder.sortable().width('130px')
+    )
+    .addCustom('name', 'الاسم', (builder) => builder.sortable().width('180px'))
+    .addCustom('department', 'القسم', (builder) =>
+      builder.sortable().width('150px')
+    )
+    .addCustom('position', 'المنصب', (builder) =>
+      builder.sortable(false).width('150px')
+    )
+    .addCurrency('salary', 'الراتب', '120px')
+    .addDate('joinDate', 'تاريخ الالتحاق', (value: string) =>
+      DateUtils.toDisplayString(value, 'en-US')
+    )
+    .addBoolean('isActive', 'الحالة', 'نشط', 'غير نشط')
+    .build();
 
   // Simple columns for static example
-  simpleColumns: TableColumn[] = [
-    {
-      key: 'id',
-      label: 'الرقم',
-      sortable: true,
-      width: '80px',
-    },
-    {
-      key: 'name',
-      label: 'الاسم',
-      sortable: true,
-    },
-    {
-      key: 'value',
-      label: 'القيمة',
-      sortable: true,
-      type: 'number',
-      align: 'left',
-    },
-  ];
+  simpleColumns: TableColumn[] = TableColumnsBuilder.create()
+    .addId('id', 'الرقم')
+    .addName('name', 'الاسم')
+    .addCustom('value', 'القيمة', (builder) =>
+      builder.sortable().asNumber().align('left')
+    )
+    .build();
 
   // Table actions - removed as per request
   actions: TableAction[] = [];

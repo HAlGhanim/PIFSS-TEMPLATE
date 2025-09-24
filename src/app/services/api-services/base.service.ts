@@ -1,8 +1,9 @@
+// src/app/services/api-services/base.service.ts
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../environment';
-import { CacheUtils } from '../../utils/';
+import { CacheUtils, CacheKeyBuilder } from '../../utils/';
 import { CacheEntry } from '../../interfaces';
 
 @Injectable({
@@ -32,8 +33,12 @@ export class BaseService {
       return this.getFresh<ResponseType>(url, headers, params);
     }
 
-    // Create a unique cache key based on URL, headers, and params
-    const cacheKey = CacheUtils.createCacheKey(url, headers, params);
+    // Create a unique cache key using CacheKeyBuilder
+    const cacheKey = CacheKeyBuilder.create()
+      .addUrl(url)
+      .addParams(params)
+      .addHeaders(headers)
+      .build();
 
     // Check if we have a valid cached response
     const cachedEntry = this.cache.get(cacheKey);
@@ -96,7 +101,7 @@ export class BaseService {
     params?: any
   ) {
     // Invalidate related cache entries when posting data
-    CacheUtils.invalidateCacheForUrl(this.cache, url);
+    this.invalidateCacheByUrlPattern(url);
 
     return this._http.post<ResponseType>(this.baseUrl + url, body, {
       headers,
@@ -114,7 +119,7 @@ export class BaseService {
     params?: any
   ) {
     // Invalidate related cache entries when posting data
-    CacheUtils.invalidateCacheForUrl(this.cache, url);
+    this.invalidateCacheByUrlPattern(url);
 
     return this._http.post<ResponseType>(this.baseUrl + url, formData, {
       headers,
@@ -132,7 +137,7 @@ export class BaseService {
     params?: any
   ) {
     // Invalidate related cache entries when updating data
-    CacheUtils.invalidateCacheForUrl(this.cache, url);
+    this.invalidateCacheByUrlPattern(url);
 
     return this._http.put<ResponseType>(this.baseUrl + url, body, {
       headers,
@@ -145,7 +150,7 @@ export class BaseService {
    */
   delete<ResponseType>(url: string, headers?: any, params?: any) {
     // Invalidate related cache entries when deleting data
-    CacheUtils.invalidateCacheForUrl(this.cache, url);
+    this.invalidateCacheByUrlPattern(url);
 
     return this._http.delete<ResponseType>(this.baseUrl + url, {
       headers,
@@ -163,9 +168,27 @@ export class BaseService {
 
   /**
    * Manually clear cache for a specific URL
+   * Uses CacheKeyBuilder to find matching entries
    */
   public clearCacheForUrl(url: string): void {
-    CacheUtils.clearCacheForUrl(this.cache, url);
+    const keysToDelete: string[] = [];
+
+    // Create a base pattern to match against
+    const basePattern = CacheKeyBuilder.create()
+      .addUrl(url)
+      .build()
+      .split('::')[0]; // Get just the URL part
+
+    this.cache.forEach((value, key) => {
+      if (key.startsWith(basePattern)) {
+        keysToDelete.push(key);
+      }
+    });
+
+    keysToDelete.forEach((key) => {
+      CacheUtils.logCacheEvent('invalidate', key);
+      this.cache.delete(key);
+    });
   }
 
   /**
@@ -199,17 +222,15 @@ export class BaseService {
 
   /**
    * Invalidate all cache entries for a specific resource type
-   * Example: invalidateCacheForResource('employees')
+   * Uses CacheKeyBuilder patterns for better matching
    */
   public invalidateCacheForResource(resourceType: string): void {
     const keysToDelete: string[] = [];
+    const resourcePattern = `resource_${resourceType}`;
 
     this.cache.forEach((value, key) => {
-      const parsed = CacheUtils.parseCacheKey(key);
-      if (
-        parsed.url?.includes(resourceType) ||
-        parsed.resourceType === resourceType
-      ) {
+      // Check if key contains the resource pattern
+      if (key.includes(resourcePattern) || key.includes(`/${resourceType}`)) {
         keysToDelete.push(key);
       }
     });
@@ -233,5 +254,27 @@ export class BaseService {
    */
   public forceCleanupExpiredCache(): void {
     CacheUtils.cleanupExpiredCache(this.cache, this.CACHE_DURATION_MS);
+  }
+
+  /**
+   * Private helper to invalidate cache by URL pattern
+   * Replaces the old CacheUtils.invalidateCacheForUrl calls
+   */
+  private invalidateCacheByUrlPattern(url: string): void {
+    const keysToDelete: string[] = [];
+
+    // Get the base path without query parameters
+    const basePath = url.split('?')[0];
+
+    this.cache.forEach((value, key) => {
+      if (key.includes(basePath)) {
+        keysToDelete.push(key);
+      }
+    });
+
+    keysToDelete.forEach((key) => {
+      CacheUtils.logCacheEvent('invalidate', key);
+      this.cache.delete(key);
+    });
   }
 }
