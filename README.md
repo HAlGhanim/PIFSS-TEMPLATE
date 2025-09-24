@@ -1,6 +1,6 @@
 # PIFSS Angular Template
 
-A modern, production-ready Angular 20 template specifically designed for the Public Institution for Social Security (PIFSS) Kuwait applications. This template provides a comprehensive foundation with pre-configured authentication, RTL support, and reusable components following PIFSS design standards.
+A modern, production-ready Angular 20 template specifically designed for the Public Institution for Social Security (PIFSS) Kuwait applications. This template provides a comprehensive foundation with pre-configured authentication, RTL support, intelligent caching, and a rich set of reusable components following PIFSS design standards.
 
 ## 🌟 Features
 
@@ -14,16 +14,18 @@ A modern, production-ready Angular 20 template specifically designed for the Pub
 
 ### Key Features
 
-- ✅ **Arabic/RTL Support** - Full right-to-left layout support with custom Arabic fonts
-- ✅ **MSAL Authentication** - Pre-configured Azure AD authentication with guards and interceptors
-- ✅ **Reusable Components** - Production-ready UI components library
-- ✅ **Advanced Table Component** - Feature-rich data table with pagination, sorting, and search
-- ✅ **Form Validation** - Custom validators for Kuwait-specific data (Civil ID, etc.)
+- ✅ **Arabic/RTL Support** - Full right-to-left layout with custom Arabic fonts (Taminat)
+- ✅ **MSAL Authentication** - Pre-configured Azure AD with guards and interceptors
+- ✅ **Smart Caching System** - Intelligent 30-second caching with automatic invalidation
+- ✅ **Reusable Components** - Production-ready UI component library
+- ✅ **Advanced Table Component** - Feature-rich data table with pagination, sorting, search, and actions
+- ✅ **Form Validation** - Kuwait-specific validators (Civil ID, phone, currency)
 - ✅ **Error Handling** - Global error interceptor with Arabic messages
 - ✅ **Loading States** - Automatic loading indicators for HTTP requests
-- ✅ **Toast Notifications** - Clean toast notification system
+- ✅ **Toast Notifications** - Clean notification system with success/error states
 - ✅ **File Download Service** - Utility for handling file downloads
-- ✅ **Smart Caching System** - Automatic 30-second caching for GET requests
+- ✅ **Date Utilities** - Comprehensive date handling with Arabic support
+- ✅ **Icon Service** - Centralized SVG icon management
 - ✅ **Responsive Design** - Mobile-first approach with Tailwind CSS
 - ✅ **Azure DevOps Ready** - Pre-configured pipeline YAML
 
@@ -33,17 +35,19 @@ A modern, production-ready Angular 20 template specifically designed for the Pub
 src/
 ├── app/
 │   ├── components/           # Reusable UI components
-│   │   ├── button/           # Custom button with loading states
+│   │   ├── button/           # Custom button with loading states & icons
 │   │   ├── card/             # Card container component
+│   │   ├── container/        # Page container wrapper
 │   │   ├── date-picker/      # Date picker with validation
 │   │   ├── forms/            # Form-related components
-│   │   │   ├── form-field/   # Form field wrapper with labels
+│   │   │   ├── form-field/   # Form field wrapper with labels & errors
 │   │   │   ├── form-input/   # Custom input component
 │   │   │   └── form-select-group/ # Grouped select dropdown
-│   │   ├── icons/            # PIFSS logo components
+│   │   ├── icons/            # Icon components
+│   │   │   ├── pifss-logo/   # PIFSS logo (3 variants)
+│   │   │   └── svg-icon/     # Dynamic SVG icon component
 │   │   ├── navbar/           # Navigation bar with sidebar
 │   │   ├── page-header/      # Page title header
-│   │   ├── report-container/ # Report page wrapper
 │   │   ├── table/            # Advanced data table component
 │   │   └── toast/            # Toast notification component
 │   │
@@ -55,30 +59,40 @@ src/
 │   │   └── loading.interceptor.ts  # Loading state management
 │   │
 │   ├── interfaces/           # TypeScript interfaces
-│   │   ├── cache/            # Cache interfaces
-│   │   ├── select/           # Select component interfaces
-│   │   ├── table/            # Table component interfaces
-│   │   └── toast/            # Toast notification interfaces
+│   │   ├── app-interfaces/
+│   │   │   └── cache.interface.ts
+│   │   └── component-interfaces/
+│   │       ├── icon.interface.ts
+│   │       ├── navigation.interface.ts
+│   │       ├── select-option.interface.ts
+│   │       ├── table.interface.ts
+│   │       └── toast.interface.ts
 │   │
 │   ├── resources/            # Static resources
 │   │   └── endpoints.json    # API endpoint definitions
 │   │
 │   ├── services/             # Application services
-│   │   ├── api-services/     # API communication services
-│   │   │   └── base.service.ts
-│   │   ├── app-services/     # Application-level services
+│   │   ├── api-services/
+│   │   │   └── base.service.ts     # Base HTTP service with caching
+│   │   ├── app-services/
+│   │   │   ├── date.service.ts     # Date manipulation service
 │   │   │   ├── file-download.service.ts
 │   │   │   ├── loading.service.ts
-│   │   │   └── msal-auth.service.ts
+│   │   │   └── msal-auth.service.ts # Authentication service
 │   │   └── component-services/
+│   │       ├── icon.service.ts     # Icon management
 │   │       ├── table.service.ts    # Table state management
-│   │       └── toast.service.ts    # Toast notification service
+│   │       └── toast.service.ts    # Toast notifications
 │   │
 │   ├── utils/                # Utility functions
-│   │   ├── CacheUtils.class.ts     # Cache management utilities
-│   │   ├── DateUtils.class.ts      # Date manipulation utilities
-│   │   ├── apiValidationError.ts   # API error parsing
-│   │   └── validators.ts           # Custom form validators
+│   │   ├── cache-key-builder.utils.ts  # Cache key generation
+│   │   ├── CacheUtils.utils.ts         # Cache management utilities
+│   │   ├── DateUtils.utils.ts          # Date manipulation utilities
+│   │   ├── error-message.utils.ts      # Error message formatting
+│   │   ├── http-params.utils.ts        # HTTP params builder
+│   │   ├── table-column-builder.utils.ts # Table column factory
+│   │   ├── apiValidationError.utils.ts # API error parsing
+│   │   └── validators.utils.ts         # Custom form validators
 │   │
 │   ├── pages/                # Page components
 │   │   ├── showcase/         # Component showcase page
@@ -90,8 +104,8 @@ src/
 │
 ├── assets/
 │   └── fonts/                # Custom Arabic/English fonts
-│       ├── Arabic/
-│       └── English/
+│       ├── Arabic/           # Taminat Arabic font
+│       └── English/          # Taminat English font
 │
 ├── environment.ts            # Development environment
 └── environment.prod.ts       # Production environment
@@ -155,7 +169,7 @@ src/
 
    ```yaml
    # Update the SourceFolder path
-   SourceFolder: "dist/YOUR-PROJECT-NAME/browser" # Change from "dist/YOUR-PROJECT-NAME/browser"
+   SourceFolder: "dist/YOUR-PROJECT-NAME/browser"
 
    # Update the base href
    customCommand: "run build -- --configuration=production --base-href /YOUR-APP-PATH/"
@@ -206,6 +220,12 @@ src/
 
 3. The tenant ID is pre-configured for PIFSS: `31819927-6989-4bd0-b5e5-81740d4154c3`
 
+4. Uncomment MSAL-related code in:
+   - `src/app/app.config.ts` - MSAL providers
+   - `src/app/app.component.ts` - Authentication initialization
+   - `src/app/components/navbar/navbar.component.ts` - User section
+   - `src/app/app.routes.ts` - Route guards
+
 ### Adding New Routes
 
 Update `src/app/app.routes.ts`:
@@ -214,35 +234,34 @@ Update `src/app/app.routes.ts`:
 {
   path: 'your-route',
   title: 'عنوان الصفحة',
-  canActivate: [MsalGuard], // Uncomment after MSAL setup
+  canActivate: [MsalGuard], // After MSAL setup
   loadComponent: () => import('./pages/your-component').then(m => m.YourComponent)
 }
 ```
 
 ### Adding Navigation Links
 
-Update the links array in `src/app/components/navbar/navbar.component.ts`:
+Update `src/app/components/navbar/navbar.component.ts`:
 
 ```typescript
-links = [
+links: NavigationLink[] = [
   {
-    label: "اسم الصفحة",
-    path: "/your-route",
-    icon: "icon-name",
-  },
+    label: 'اسم الصفحة',
+    path: '/your-route',
+    icon: 'icon-name',
+    badge: 'جديد',
+    badgeColor: 'success'
+  }
 ];
 ```
 
-Navbar Example:
-![Screenshot](./src/assets/images/Navbar-example.png)
-
-## 💾 Caching System
+## 💾 Smart Caching System
 
 The template includes an intelligent caching system that automatically caches GET requests for 30 seconds to improve performance and reduce server load.
 
 ### Features
 
-- **Automatic Caching** - All GET requests are cached for 30 seconds by default
+- **Automatic Caching** - All GET requests cached for 30 seconds by default
 - **Smart Invalidation** - Cache automatically invalidates when data is modified (POST/PUT/DELETE)
 - **Memory Management** - Automatic cleanup of expired cache entries
 - **Development Tools** - Built-in debugging and cache statistics
@@ -250,137 +269,50 @@ The template includes an intelligent caching system that automatically caches GE
 
 ### How It Works
 
-The caching system is implemented in the `BaseService` class and uses RxJS observables with `shareReplay` to prevent duplicate requests:
-
 ```typescript
 // All GET requests are automatically cached
 this.baseService.get("/api/employees"); // First call - hits server
 this.baseService.get("/api/employees"); // Within 30 seconds - returns cached data
-```
 
-### Cache Management
+// Get fresh data (bypass cache)
+this.baseService.getFresh("/api/employees");
 
-#### Manually Clear Cache
-
-```typescript
-// Clear all cache
+// Clear cache
 this.baseService.clearCache();
-
-// Clear cache for specific URL
 this.baseService.clearCacheForUrl("/api/employees");
-
-// Clear cache for resource type
 this.baseService.invalidateCacheForResource("employees");
 ```
 
-#### Disable Caching
-
-You can temporarily disable caching for debugging:
+### Debugging Cache
 
 ```typescript
-// Via localStorage (persistent)
+// Via localStorage
 localStorage.setItem("disableCache", "true");
+localStorage.setItem("verboseLogging", "true");
 
-// Via URL parameter (temporary)
+// Via URL parameter
 //localhost:4200?noCache=true
 
-// Get fresh data regardless of cache
-http: this.baseService.getFresh("/api/employees");
+// Get cache statistics
+http: const stats = this.baseService.getCacheStats();
 ```
 
-#### Cache Statistics
-
-Monitor cache performance in development:
-
-```typescript
-const stats = this.baseService.getCacheStats();
-console.log(stats);
-// Output: { size: 5, validCount: 3, expiredCount: 2, entries: [...] }
-```
-
-### Cache Configuration
-
-The cache duration is set to 30 seconds by default. To modify:
-
-```typescript
-// In CacheUtils.class.ts
-private static readonly CACHE_DURATION_MS = 30000; // 30 seconds
-```
-
-### Debugging
-
-Enable verbose logging in development:
-
-```typescript
-// Enable cache logging
-localStorage.setItem("verboseLogging", "true");
-```
-
-This will log cache events in the console:
-
-- `[Cache Hit]` - Data served from cache
-- `[Cache Miss]` - Data fetched from server
-- `[Cache Store]` - Data stored in cache
-- `[Cache Invalidate]` - Cache entry removed
-
-### Best Practices
-
-1. **Don't cache sensitive data** - User-specific or frequently changing data should use `getFresh()`
-2. **Use appropriate cache duration** - 30 seconds works well for most cases
-3. **Monitor cache size** - Use `getCacheStats()` in development to ensure cache doesn't grow too large
-4. **Test with cache disabled** - Always test your application with `?noCache=true` to ensure it works without caching
-
-### Example Usage
-
-```typescript
-export class EmployeeService extends BaseService {
-  // Automatically cached for 30 seconds
-  getEmployees() {
-    return this.get<Employee[]>("/api/employees");
-  }
-
-  // Cache automatically invalidated after update
-  updateEmployee(id: number, data: Employee) {
-    return this.put(`/api/employees/${id}`, data);
-  }
-
-  // Force fresh data (no cache)
-  getEmployeeFresh(id: number) {
-    return this.getFresh<Employee>(`/api/employees/${id}`);
-  }
-
-  // Manual cache management
-  refreshEmployeeData() {
-    this.clearCacheForUrl("/api/employees");
-    return this.getEmployees();
-  }
-}
-```
-
-## 📦 Available Components
-
-### Toast Notifications
-
-```typescript
-// In your component
-import { ToastService } from './services';
-
-constructor(private toastService: ToastService) {}
-
-// Show success toast
-this.toastService.showSuccess('Operation completed successfully!');
-
-// Show error toast
-this.toastService.showError('An error occurred');
-
-// Show with custom duration (in milliseconds)
-this.toastService.showSuccess('Message', 5000);
-```
+## 📦 Components Library
 
 ### Button Component
 
 ```html
-<app-button text="نص الزر" [loading]="isLoading" [disabled]="isDisabled" (btnClick)="handleClick()" [showIcon]="true" iconType="download"> </app-button>
+<app-button text="نص الزر" [loading]="isLoading" [disabled]="isDisabled" [showIcon]="true" iconType="download" (btnClick)="handleClick()"> </app-button>
+```
+
+### Toast Notifications
+
+```typescript
+constructor(private toastService: ToastService) {}
+
+this.toastService.showSuccess('Operation successful!');
+this.toastService.showError('An error occurred');
+this.toastService.showSuccess('Custom duration', 5000);
 ```
 
 ### Form Components
@@ -405,475 +337,79 @@ this.toastService.showSuccess('Message', 5000);
 
 ## 📊 Table Component
 
-The template includes a powerful, reusable table component with built-in features for pagination, sorting, searching, and selection. Perfect for displaying tabular data with minimal setup.
+The template includes a powerful, reusable table component with extensive features.
 
-### Table Features
+### Features
 
-- ✅ **Pagination** - Built-in pagination with customizable page sizes
-- ✅ **Sorting** - Column-based sorting (ascending/descending)
-- ✅ **Search** - Real-time search across all data fields with Arabic text normalization
-- ✅ **Selection** - Row selection with checkbox support
-- ✅ **Loading States** - Automatic loading overlay
-- ✅ **Actions** - Customizable row actions with conditional rendering
-- ✅ **Responsive** - Mobile-friendly with horizontal scrolling
-- ✅ **Custom Templates** - Support for custom cell templates
-- ✅ **Static & Dynamic Data** - Works with both API and static data
+- ✅ Pagination with customizable page sizes
+- ✅ Column sorting (ascending/descending)
+- ✅ Real-time search with Arabic text normalization
+- ✅ Row selection with checkboxes
+- ✅ Row actions with conditional rendering
+- ✅ Loading states with overlay
+- ✅ Custom cell templates
+- ✅ Responsive design
+- ✅ Static & dynamic data support
 
-### Basic Table Usage
-
-```typescript
-import { TableComponent } from './components';
-import { TableColumn } from './interfaces';
-
-// Define your columns
-columns: TableColumn[] = [
-  {
-    key: 'id',
-    label: 'الرقم',
-    sortable: true,
-    width: '80px'
-  },
-  {
-    key: 'name',
-    label: 'الاسم',
-    sortable: true
-  },
-  {
-    key: 'salary',
-    label: 'الراتب',
-    sortable: true,
-    type: 'currency',
-    align: 'left'
-  },
-  {
-    key: 'joinDate',
-    label: 'تاريخ الالتحاق',
-    sortable: true,
-    type: 'date'
-  },
-  {
-    key: 'isActive',
-    label: 'الحالة',
-    sortable: true,
-    type: 'boolean'
-  }
-];
-```
-
-```html
-<app-table [columns]="columns" [data]="tableData" [totalItems]="totalItems" [loading]="isLoading" [selectable]="true" [searchable]="true" (pageChange)="onPageChange($event)" (pageSizeChange)="onPageSizeChange($event)" (sortChange)="onSortChange($event)" (searchChange)="onSearchChange($event)" (selectionChange)="onSelectionChange($event)" (refresh)="onRefresh()" />
-```
-
-### Table Configuration
-
-#### Column Configuration
+### Basic Usage
 
 ```typescript
-interface TableColumn {
-  key: string; // Data property key
-  label: string; // Column header label
-  sortable?: boolean; // Enable sorting (default: false)
-  width?: string; // Column width (e.g., '150px')
-  align?: "left" | "center" | "right"; // Text alignment
-  type?: "text" | "number" | "date" | "currency" | "boolean" | "custom";
-  format?: (value: any) => string; // Custom formatter function
-  customTemplate?: any; // Custom Angular template
-}
-```
+// Define columns using the builder pattern
+columns: TableColumn[] = TableColumnsBuilder.create<Employee>()
+  .addCustom('civilId', 'الرقم المدني', builder =>
+    builder.sortable().width('130px'))
+  .addName('name', 'الاسم')
+  .addCurrency('salary', 'الراتب', '120px')
+  .addDate('joinDate', 'تاريخ الالتحاق')
+  .addBoolean('isActive', 'الحالة', 'نشط', 'غير نشط')
+  .build();
 
-#### Table Inputs
-
-| Input             | Type            | Default                | Description                            |
-| ----------------- | --------------- | ---------------------- | -------------------------------------- |
-| `columns`         | `TableColumn[]` | Required               | Column definitions                     |
-| `data`            | `any[]`         | Required               | Data to display                        |
-| `totalItems`      | `number`        | 0                      | Total number of items (for pagination) |
-| `loading`         | `boolean`       | false                  | Show loading overlay                   |
-| `selectable`      | `boolean`       | false                  | Enable row selection                   |
-| `searchable`      | `boolean`       | true                   | Show search box                        |
-| `rowClickable`    | `boolean`       | false                  | Enable row click events                |
-| `actions`         | `TableAction[]` | []                     | Row action buttons                     |
-| `pageSizeOptions` | `number[]`      | [10, 25, 50, 100]      | Page size options                      |
-| `initialPageSize` | `number`        | 10                     | Initial page size                      |
-| `emptyMessage`    | `string`        | 'لا توجد بيانات للعرض' | Message when no data                   |
-
-#### Table Outputs
-
-| Output            | Type                                               | Description                       |
-| ----------------- | -------------------------------------------------- | --------------------------------- |
-| `pageChange`      | `number`                                           | Fired when page changes           |
-| `pageSizeChange`  | `number`                                           | Fired when page size changes      |
-| `sortChange`      | `{sortBy: string, sortDirection: 'asc' \| 'desc'}` | Fired on sort                     |
-| `searchChange`    | `string`                                           | Fired on search (debounced 500ms) |
-| `selectionChange` | `any[]`                                            | Fired when selection changes      |
-| `rowClick`        | `any`                                              | Fired when row is clicked         |
-| `refresh`         | `void`                                             | Fired when refresh button clicked |
-
-### Advanced Table Features
-
-#### Row Actions
-
-Add custom actions for each row:
-
-```typescript
-actions: TableAction[] = [
-  {
-    label: 'عرض',
-    icon: '<svg>...</svg>',  // Optional icon HTML
-    handler: (row) => this.viewItem(row),
-    class: 'text-blue-600 hover:text-blue-800'
-  },
-  {
-    label: 'تعديل',
-    handler: (row) => this.editItem(row),
-    condition: (row) => row.isActive, // Show only for active items
-    class: 'text-green-600 hover:text-green-800'
-  },
-  {
-    label: 'حذف',
-    handler: (row) => this.deleteItem(row),
-    class: 'text-red-600 hover:text-red-800'
-  }
-];
-```
-
-#### Custom Cell Templates
-
-Use custom templates for complex cell content:
-
-```typescript
-// In your component
-@ViewChild('statusTemplate', { static: true }) statusTemplate!: TemplateRef<any>;
-
-columns: TableColumn[] = [
-  {
-    key: 'status',
-    label: 'الحالة',
-    customTemplate: this.statusTemplate
-  }
-];
-```
-
-```html
-<!-- Define the template -->
-<ng-template #statusTemplate let-row let-value="value">
-  <span class="badge" [class.badge-success]="value === 'active'"> {{ value }} </span>
-</ng-template>
-```
-
-#### Custom Formatting
-
-Format cell values with custom functions:
-
-```typescript
-columns: TableColumn[] = [
-  {
-    key: 'percentage',
-    label: 'النسبة',
-    type: 'number',
-    format: (value) => `${(value * 100).toFixed(2)}%`
-  },
-  {
-    key: 'status',
-    label: 'الحالة',
-    format: (value) => {
-      const statusMap = {
-        'pending': 'قيد الانتظار',
-        'approved': 'موافق عليه',
-        'rejected': 'مرفوض'
-      };
-      return statusMap[value] || value;
-    }
-  }
-];
-```
-
-### Table Service
-
-The template includes a `TableService` for managing table state with API integration:
-
-#### With API Data
-
-```typescript
-import { TableService } from "./services";
-
-export class EmployeeListComponent implements OnInit {
-  tableState!: TableStateManager<Employee>;
-
-  constructor(private tableService: TableService) {}
-
-  ngOnInit() {
-    // Create managed table state with automatic API calls
-    this.tableState = this.tableService.createTableState<Employee>("/api/employees", {
-      page: 1,
-      pageSize: 10,
-      sortBy: "name",
-      sortDirection: "asc",
-    });
-  }
-
-  // Event handlers
-  onPageChange(page: number) {
-    this.tableState.setPage(page);
-  }
-
-  onPageSizeChange(pageSize: number) {
-    this.tableState.setPageSize(pageSize);
-  }
-
-  onSortChange(sort: { sortBy: string; sortDirection: "asc" | "desc" }) {
-    this.tableState.setSort(sort.sortBy, sort.sortDirection);
-  }
-
-  onSearchChange(search: string) {
-    this.tableState.setSearch(search);
-  }
-
-  onRefresh() {
-    this.tableState.refresh();
-  }
-}
-```
-
-```html
-<!-- Template with observables -->
-<app-table [columns]="columns" [data]="(tableState.data$ | async) || []" [totalItems]="(tableState.totalItems$ | async) || 0" [loading]="(tableState.loading$ | async) || false" (pageChange)="onPageChange($event)" (pageSizeChange)="onPageSizeChange($event)" (sortChange)="onSortChange($event)" (searchChange)="onSearchChange($event)" (refresh)="onRefresh()" />
-```
-
-#### With Static Data
-
-```typescript
-// For development or static data
-staticData = [
-  { id: 1, name: 'أحمد محمد', salary: 2500 },
-  { id: 2, name: 'فاطمة علي', salary: 3000 },
-  // ... more data
-];
-
-ngOnInit() {
-  // Create table state with static data
-  this.tableState = this.tableService.createStaticTableState(
-    this.staticData,
-    {
-      page: 1,
-      pageSize: 10,
-      sortBy: 'name',
-      sortDirection: 'asc'
-    }
-  );
-}
-```
-
-### Table State Manager Interface
-
-```typescript
-interface TableStateManager<T> {
-  data$: Observable<T[]>; // Table data
-  totalItems$: Observable<number>; // Total item count
-  loading$: Observable<boolean>; // Loading state
-  error$: Observable<string | null>; // Error messages
-  currentState$: Observable<TableQueryParams>; // Current parameters
-
-  setPage(page: number): void;
-  setPageSize(pageSize: number): void;
-  setSort(sortBy: string, direction: "asc" | "desc"): void;
-  setSearch(search: string): void;
-  setFilters(filters: Record<string, any>): void;
-  refresh(): void;
-  reset(): void;
-}
-```
-
-### API Response Format
-
-The table expects paginated API responses in this format:
-
-```typescript
-interface PaginatedResponse<T> {
-  data: T[]; // Array of items
-  totalItems: number; // Total count for pagination
-  currentPage: number; // Current page number
-  pageSize: number; // Items per page
-  totalPages: number; // Total number of pages
-}
-```
-
-### Arabic Search Support
-
-The table includes built-in Arabic text normalization for better search results:
-
-- Removes diacritics (tashkeel)
-- Normalizes different forms of Alef (أ، إ، آ → ا)
-- Normalizes Taa Marbouta (ة → ه)
-- Normalizes different forms of Yaa (ى → ي)
-
-### Complete Table Example
-
-```typescript
-// employee-list.component.ts
-import { Component, OnInit, inject } from "@angular/core";
-import { TableService, ToastService } from "../../services";
-import { TableColumn, TableAction, TableStateManager } from "../../interfaces";
-
-interface Employee {
-  id: number;
-  civilId: string;
-  name: string;
-  department: string;
-  salary: number;
-  joinDate: string;
-  isActive: boolean;
-}
-
-@Component({
-  selector: "app-employee-list",
-  template: ` <app-table [columns]="columns" [data]="(tableState.data$ | async) || []" [totalItems]="(tableState.totalItems$ | async) || 0" [loading]="(tableState.loading$ | async) || false" [selectable]="true" [searchable]="true" [rowClickable]="true" [actions]="actions" [initialPageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]" (pageChange)="tableState.setPage($event)" (pageSizeChange)="tableState.setPageSize($event)" (sortChange)="tableState.setSort($event.sortBy, $event.sortDirection)" (searchChange)="tableState.setSearch($event)" (selectionChange)="onSelectionChange($event)" (rowClick)="onRowClick($event)" (refresh)="tableState.refresh()" /> `,
-})
-export class EmployeeListComponent implements OnInit {
-  private tableService = inject(TableService);
-  private toastService = inject(ToastService);
-
-  tableState!: TableStateManager<Employee>;
-
-  columns: TableColumn[] = [
-    { key: "civilId", label: "الرقم المدني", sortable: true },
-    { key: "name", label: "الاسم", sortable: true },
-    { key: "department", label: "القسم", sortable: true },
-    { key: "salary", label: "الراتب", type: "currency", sortable: true },
-    { key: "joinDate", label: "تاريخ الالتحاق", type: "date", sortable: true },
-    { key: "isActive", label: "الحالة", type: "boolean", sortable: true },
-  ];
-
-  actions: TableAction[] = [
-    {
-      label: "عرض",
-      handler: (row) => this.viewEmployee(row),
-      class: "text-blue-600",
-    },
-    {
-      label: "تعديل",
-      handler: (row) => this.editEmployee(row),
-      condition: (row) => row.isActive,
-    },
-    {
-      label: "حذف",
-      handler: (row) => this.deleteEmployee(row),
-      class: "text-red-600",
-    },
-  ];
-
-  ngOnInit() {
-    this.tableState = this.tableService.createTableState<Employee>("/api/employees", { page: 1, pageSize: 25, sortBy: "name", sortDirection: "asc" });
-  }
-
-  onRowClick(employee: Employee) {
-    console.log("Row clicked:", employee);
-  }
-
-  viewEmployee(employee: Employee) {
-    // Navigate to detail view
-  }
-
-  editEmployee(employee: Employee) {
-    // Open edit dialog
-  }
-
-  deleteEmployee(employee: Employee) {
-    if (confirm(`حذف ${employee.name}?`)) {
-      // Call delete API
-      this.tableState.refresh();
-    }
-  }
-}
-```
-
-## 🛠️ Custom Validators
-
-The template includes Kuwait-specific validators:
-
-- **Kuwait Civil ID**: Validates 12-digit Kuwait civil IDs
-- **Date Range**: Ensures end date is after start date
-- **Positive Number**: Validates positive numeric values
-- **Arabic Text**: Validates Arabic-only text input
-- **English Text**: Validates English-only text input
-
-Usage example:
-
-```typescript
-form = this.fb.group(
-  {
-    civilId: ["", [Validators.required, CustomValidators.kuwaitCivilId()]],
-    startDate: ["", Validators.required],
-    endDate: ["", Validators.required],
-  },
-  {
-    validators: CustomValidators.dateRange("startDate", "endDate"),
-  }
+// Create table state with API
+tableState = this.tableService.createTableState<Employee>(
+  '/api/employees',
+  { page: 1, pageSize: 10, sortBy: 'name', sortDirection: 'asc' }
 );
 ```
 
-## 🎨 Styling
-
-### Tailwind Configuration
-
-The project uses Tailwind CSS v4 with custom PIFSS theme colors:
-
-- Primary: `hsl(203.59 100% 28.43%)` - PIFSS Blue
-- Custom utility classes for RTL support
-- Pre-defined form styles
-
-### Custom CSS Classes
-
-- `.form-input-rtl` - RTL text input
-- `.btn-primary` - Primary button style
-- `.btn-secondary` - Secondary button style
-- `.card` - Card container style
-- `.form-grid` - Form grid layout
-
-## 📋 Services
-
-### ToastService
-
-Display toast notifications:
-
-```typescript
-// Inject the service
-private toastService = inject(ToastService);
-
-// Show notifications
-toastService.showSuccess("Success message");
-toastService.showError("Error message");
-
-// Clear all toasts
-toastService.clearAll();
+```html
+<app-table [columns]="columns" [data]="(tableState.data$ | async) || []" [totalItems]="(tableState.totalItems$ | async) || 0" [loading]="(tableState.loading$ | async) || false" [selectable]="true" [searchable]="true" (pageChange)="tableState.setPage($event)" (sortChange)="tableState.setSort($event.sortBy, $event.sortDirection)" (searchChange)="tableState.setSearch($event)" (refresh)="tableState.refresh()" />
 ```
 
-### MsalAuthService
+## 🛠️ Services
 
-Handles authentication operations:
+### BaseService
+
+Base service for API communication with automatic caching:
 
 ```typescript
-authService.isAuthenticated();
-authService.getUserDisplayName();
-authService.loginRedirect();
-authService.logoutRedirect();
+// GET request (cached for 30 seconds)
+baseService.get<T>(url, headers, params);
+
+// GET fresh data (bypass cache)
+baseService.getFresh<T>(url, headers, params);
+
+// POST/PUT/DELETE (invalidates related cache)
+baseService.post<T>(url, body, headers, params);
+baseService.put<T>(url, body, headers, params);
+baseService.delete<T>(url, headers, params);
+
+// Cache management
+baseService.clearCache();
+baseService.getCacheStats();
 ```
 
-### FileDownloadService
+### DateService
 
-Handles file downloads:
-
-```typescript
-fileDownloadService.downloadFile(blob, filename);
-fileDownloadService.getFileNameFromResponse(response);
-```
-
-### LoadingService
-
-Loading state management (automatically handled by interceptor):
+Comprehensive date manipulation service:
 
 ```typescript
-loadingService.isLoading(); // Returns signal<boolean>
+dateService.getToday();
+dateService.formatForDisplay(date, "ar-KW");
+dateService.formatRange(startDate, endDate);
+dateService.addDays(date, 5);
+dateService.getDaysBetween(date1, date2);
+dateService.isValid(dateString);
+dateService.createRangeParams(startDate, endDate);
 ```
 
 ### TableService
@@ -881,50 +417,131 @@ loadingService.isLoading(); // Returns signal<boolean>
 Manages table state with API integration:
 
 ```typescript
-// Create table state with API
+// Create table with API
 tableService.createTableState<T>(endpoint, initialParams);
 
-// Create table state with static data
+// Create table with static data
 tableService.createStaticTableState<T>(data, initialParams);
-
-// Build HTTP params
-tableService.buildHttpParams(params);
 ```
 
-### BaseService
+### IconService
 
-Base service for API communication with automatic caching:
+Centralized SVG icon management:
 
 ```typescript
-// GET request (automatically cached for 30 seconds)
-baseService.get<T>(url, headers, params);
-
-// GET fresh data (bypass cache)
-baseService.getFresh<T>(url, headers, params);
-
-// POST request (invalidates related cache)
-baseService.post<T>(url, body, headers, params);
-
-// PUT request (invalidates related cache)
-baseService.put<T>(url, body, headers, params);
-
-// DELETE request (invalidates related cache)
-baseService.delete<T>(url, headers, params);
-
-// Cache management
-baseService.clearCache();
-baseService.clearCacheForUrl(url);
-baseService.invalidateCacheForResource(resourceType);
-baseService.getCacheStats();
+iconService.getIcon("users");
+iconService.hasIcon("custom-icon");
+iconService.getAllIconNames();
 ```
+
+## 🔍 Utilities
+
+### Custom Validators
+
+Kuwait-specific form validators:
+
+```typescript
+CustomValidators.kuwaitCivilId(); // 12-digit Civil ID
+CustomValidators.KuwaitPhoneNumber(); // 8-digit phone number
+CustomValidators.kuwaitDinar(); // KWD format (X.XXX)
+CustomValidators.dateRange("start", "end");
+CustomValidators.arabicText();
+CustomValidators.englishText();
+CustomValidators.positiveNumber();
+```
+
+### Error Message Utils
+
+Centralized error message handling:
+
+```typescript
+ErrorMessageUtils.getErrorMessage(control, fieldName);
+ErrorMessageUtils.hasError(control);
+ErrorMessageUtils.getAllFormErrors(form);
+```
+
+### Table Column Builder
+
+Fluent API for building table columns:
+
+```typescript
+TableColumnsBuilder.create<T>().addId().addName("fullName", "الاسم الكامل").addEmail().addDate("joinDate", "تاريخ الالتحاق").addCurrency("salary", "الراتب").addBoolean("isActive", "الحالة", "نشط", "غير نشط").build();
+```
+
+### Cache Key Builder
+
+Consistent cache key generation:
+
+```typescript
+CacheKeyBuilder.create().addUrl("/api/employees").addParams({ department: "IT" }).addPagination(1, 10).build();
+```
+
+### HTTP Params Utils
+
+Utility for building HTTP parameters:
+
+```typescript
+HttpParamsUtils.buildTableParams({
+  page: 1,
+  pageSize: 10,
+  sortBy: "name",
+  sortDirection: "asc",
+  search: "john",
+  filters: { status: "active" },
+});
+```
+
+## 🎨 Styling
+
+### Tailwind Configuration
+
+- Custom PIFSS theme with primary color: `hsl(203.59 100% 28.43%)`
+- Custom Arabic (Taminat Arabic) and English (Taminat English) fonts
+- RTL-ready utility classes
+- Pre-defined component styles
+
+### Custom CSS Classes
+
+```css
+.form-input-rtl    /* RTL text input */
+/* RTL text input */
+.btn-primary        /* Primary button style */
+.btn-secondary      /* Secondary button style */
+.card               /* Card container */
+.form-grid          /* Form grid layout */
+.alert-success      /* Success alert */
+.alert-error; /* Error alert */
+```
+
+## 🧪 Example Pages
+
+### Showcase Page (`/showcase`)
+
+Comprehensive demonstration of all components including:
+
+- Toast notifications with various states
+- Complete form with Kuwait-specific validation
+- All button variations and states
+- Statistics cards
+- Form components with error handling
+
+### Employee List Page (`/employee-list`)
+
+Complete table implementation example featuring:
+
+- Pagination with customizable page sizes
+- Column sorting
+- Real-time search with Arabic support
+- Row selection
+- Loading states
+- Static and dynamic data examples
+- Cache management integration
 
 ## 🚢 Deployment
 
 ### Azure DevOps Pipeline
 
-The project includes a pre-configured pipeline (`azure-pipelines.yml`):
-
-1. Update the base href in the pipeline:
+1. Update the base href in `azure-pipelines.yml`:
 
    ```yaml
    customCommand: "run build -- --configuration=production --base-href /YOUR-APP-PATH/"
@@ -948,10 +565,12 @@ npm run build -- --configuration=production
 ```typescript
 {
   production: false,
-  baseurl: 'http://localhost:5000',  // Your local API
+  baseurl: 'http://localhost:5000',
   msal: {
-    local: {
-      redirectUri: 'http://localhost:4200'
+    redirectUri: 'http://localhost:4200',
+    entraId: {
+      clientId: 'YOUR-CLIENT-ID',
+      apiScopes: ['api://YOUR-CLIENT-ID/User.Read']
     }
   }
 }
@@ -962,63 +581,33 @@ npm run build -- --configuration=production
 ```typescript
 {
   production: true,
-  baseurl: 'https://api.production.com',  // Production API
+  baseurl: 'https://api.production.com',
   msal: {
-    dev: {
-      redirectUri: 'https://your-app.pifss.gov.kw'
+    redirectUri: 'https://your-app.pifss.gov.kw',
+    entraId: {
+      clientId: 'YOUR-CLIENT-ID',
+      apiScopes: ['api://YOUR-CLIENT-ID/User.Read']
     }
   }
 }
 ```
-
-## 🧪 Example Pages
-
-### Showcase Page
-
-The template includes a comprehensive showcase page demonstrating all components. To view it:
-
-1. Run the development server: `npm start`
-2. Navigate to `http://localhost:4200/showcase`
-
-The showcase includes:
-
-- Toast notification examples
-- Complete form with validation
-- All button states
-- Statistics cards
-- Form components with error handling
-
-### Employee List Page
-
-A complete example of the table component with:
-
-1. Navigate to `http://localhost:4200/employee-list`
-2. Features demonstrated:
-   - Pagination with customizable page sizes
-   - Column sorting
-   - Real-time search with Arabic support
-   - Row selection
-   - Row actions
-   - Loading states
-   - Static and dynamic data examples
 
 ## 🤝 Contributing
 
 1. Create a feature branch from `main`
 2. Make your changes
 3. Test thoroughly with Arabic/RTL content
-4. Submit a pull request
+4. Ensure caching works correctly
+5. Submit a pull request
 
 ## 🆘 Support
 
 For technical support or questions:
 
-- Infrastructure/MSAL: Nidheesh Nattiala - Nidheesh@pifss.gov.kw
-- Infrastructure/Pipelines - CI/CD: Abdulmutalib AlHaddad - AHAlhaddad@pifss.gov.kw
+- **Infrastructure/MSAL**: Nidheesh Nattiala - Nidheesh@pifss.gov.kw
+- **Infrastructure/Pipelines - CI/CD**: Abdulmutalib AlHaddad - AHAlhaddad@pifss.gov.kw
 
----
-
-## Quick Reference
+## 📋 Quick Reference
 
 ### Common Commands
 
@@ -1031,18 +620,47 @@ npm run build -- --configuration=production
 
 # Run tests
 npm test
+
+# Clear cache (in browser console)
+localStorage.setItem('disableCache', 'true')
+
+# Enable verbose logging
+localStorage.setItem('verboseLogging', 'true')
 ```
 
-### Project Checklist
+### Project Setup Checklist
 
-- [ ] Rename project from PIFSS-Template
-- [ ] Configure MSAL authentication
-- [ ] Update API base URL
-- [ ] Update Azure Pipeline configuration
+- [ ] Clone and rename project from PIFSS-Template
+- [ ] Configure MSAL authentication with infrastructure team
+- [ ] Update API base URL in environment files
+- [ ] Configure Azure Pipeline settings
 - [ ] Test RTL/Arabic support
-- [ ] Configure navigation links
-- [ ] Set up routes with guards
-- [ ] Test table component with your data
+- [ ] Set up navigation links in navbar
+- [ ] Configure routes with appropriate guards
+- [ ] Test table component with your API endpoints
+- [ ] Verify caching behavior with your data
 - [ ] Implement custom validators as needed
 - [ ] Configure toast notifications
-- [ ] Test caching functionality with your API
+- [ ] Test file downloads if needed
+
+### Key Features Summary
+
+- 🚀 **Performance**: 30-second intelligent caching system
+- 🔐 **Security**: MSAL/Azure AD authentication ready
+- 🌍 **Localization**: Full Arabic/RTL support with custom fonts
+- 📊 **Data Management**: Advanced table with state management
+- 🎨 **UI/UX**: Comprehensive component library with Tailwind CSS
+- 🛠️ **Developer Experience**: TypeScript, standalone components, utilities
+- 📱 **Responsive**: Mobile-first design approach
+- 🔍 **Validation**: Kuwait-specific form validators
+- 📦 **Architecture**: Clean, modular structure with separation of concerns
+
+---
+
+## Version History
+
+- **v1.0.0** - Initial release with core components and MSAL authentication
+- **v1.1.0** - Added intelligent caching system
+- **v1.2.0** - Enhanced table component with builder pattern
+- **v1.3.0** - Added comprehensive date and icon services
+- **v1.4.0** - Improved error handling and validation utilities
