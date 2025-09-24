@@ -1,6 +1,7 @@
 import { Component, input, computed, contentChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgControl } from '@angular/forms';
+import { VALIDATION_MESSAGES, FormHelpers } from '../../../utils/validators';
 
 @Component({
   selector: 'app-form-field',
@@ -28,44 +29,33 @@ export class FormFieldComponent {
 
   hasError = computed(() => {
     const ctrl = this.control();
-    return !!(ctrl?.invalid && (ctrl?.dirty || ctrl?.touched));
+    return FormHelpers.hasError(ctrl?.control ?? null);
   });
 
   computedErrorMessage = computed(() => {
+    if (this.errorMessage()) {
+      return this.errorMessage();
+    }
+
     const ctrl = this.control();
     if (!ctrl?.errors) return '';
 
     const errors = ctrl.errors;
+    const errorKey = Object.keys(errors)[0];
+    const errorValue = errors[errorKey];
+    let message =
+      VALIDATION_MESSAGES[errorKey as keyof typeof VALIDATION_MESSAGES] ||
+      'قيمة غير صحيحة';
 
-    if (errors['required']) return 'هذا الحقل مطلوب';
-    if (errors['email']) return 'يرجى إدخال بريد إلكتروني صحيح';
-    if (errors['minlength']) {
-      return `الحد الأدنى ${errors['minlength'].requiredLength} أحرف`;
-    }
-    if (errors['maxlength']) {
-      return `الحد الأقصى ${errors['maxlength'].requiredLength} أحرف`;
-    }
-    if (errors['pattern']) return 'يرجى إدخال قيمة صحيحة';
-    if (errors['min']) return `القيمة يجب أن تكون أكبر من ${errors['min'].min}`;
-    if (errors['max']) return `القيمة يجب أن تكون أقل من ${errors['max'].max}`;
-
-    if (errors['maxDate']) {
-      return (
-        errors['maxDate'].message ||
-        `التاريخ يجب أن يكون قبل ${errors['maxDate'].max}`
-      );
-    }
-    if (errors['minDate']) {
-      return (
-        errors['minDate'].message ||
-        `التاريخ يجب أن يكون بعد ${errors['minDate'].min}`
-      );
+    if (typeof errorValue === 'object' && errorValue !== null) {
+      Object.keys(errorValue).forEach((key) => {
+        const value = errorValue[key];
+        if (value !== null && value !== undefined) {
+          message = message.replace(`{${key}}`, value.toString());
+        }
+      });
     }
 
-    if (errors['dateRange']) {
-      return 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية';
-    }
-
-    return this.errorMessage() || 'قيمة غير صحيحة';
+    return message;
   });
 }

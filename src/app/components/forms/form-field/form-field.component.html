@@ -10,13 +10,13 @@
 
   <ng-content></ng-content>
 
-  @if (hint() && !showError()) {
+  @if (hint() && !showError() && !hasError()) {
   <p class="mt-1 mr-1 text-sm text-gray-500">
     {{ hint() }}
   </p>
-  } @if (showError() && errorMessage()) {
+  } @if ((showError() || hasError()) && computedErrorMessage()) {
   <p class="mt-1 text-sm text-red-600">
-    {{ errorMessage() }}
+    {{ computedErrorMessage() }}
   </p>
   }
 </div>

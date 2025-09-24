@@ -766,10 +766,6 @@ export class EmployeeListComponent implements OnInit {
     this.tableState = this.tableService.createTableState<Employee>("/api/employees", { page: 1, pageSize: 25, sortBy: "name", sortDirection: "asc" });
   }
 
-  onSelectionChange(selected: Employee[]) {
-    this.toastService.showSuccess(`تم تحديد ${selected.length} موظف`);
-  }
-
   onRowClick(employee: Employee) {
     console.log("Row clicked:", employee);
   }

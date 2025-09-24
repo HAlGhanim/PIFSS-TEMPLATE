@@ -8,6 +8,7 @@ import {
   AbstractControl,
   ValidationErrors,
 } from '@angular/forms';
+import { DateUtils } from '../../utils';
 
 @Component({
   selector: 'app-date-picker',
@@ -28,11 +29,12 @@ import {
   ],
 })
 export class DatePicker implements ControlValueAccessor, Validator {
-  maxDate = input(new Date().toISOString().split('T')[0]);
+  maxDate = input(DateUtils.toDateString(new Date()));
   minDate = input('');
 
   value: string = '';
   disabled = false;
+  touched = false;
 
   private onChangeCallback: (value: any) => void = () => {};
   private onTouchedCallback: () => void = () => {};
@@ -42,8 +44,12 @@ export class DatePicker implements ControlValueAccessor, Validator {
     const inputValue = (event.target as HTMLInputElement).value;
 
     this.value = inputValue;
-
     this.onChangeCallback(inputValue);
+
+    if (!this.touched) {
+      this.touched = true;
+      this.onTouchedCallback();
+    }
 
     this.onValidatorChange();
   }
@@ -52,24 +58,33 @@ export class DatePicker implements ControlValueAccessor, Validator {
     const inputElement = event.target as HTMLInputElement;
     const inputValue = inputElement.value;
 
+    let correctedValue = inputValue;
+
     if (inputValue && this.maxDate() && inputValue > this.maxDate()) {
-      this.value = this.maxDate();
-      inputElement.value = this.maxDate();
-      this.onChangeCallback(this.maxDate());
+      correctedValue = this.maxDate();
     }
 
     if (inputValue && this.minDate() && inputValue < this.minDate()) {
-      this.value = this.minDate();
-      inputElement.value = this.minDate();
-      this.onChangeCallback(this.minDate());
+      correctedValue = this.minDate();
     }
 
+    if (correctedValue !== inputValue) {
+      this.value = correctedValue;
+      inputElement.value = correctedValue;
+      this.onChangeCallback(correctedValue);
+    }
+
+    this.touched = true;
     this.onTouchedCallback();
     this.onValidatorChange();
   }
 
   writeValue(value: any): void {
-    this.value = value || '';
+    if (value instanceof Date) {
+      this.value = DateUtils.toDateString(value);
+    } else {
+      this.value = value || '';
+    }
   }
 
   registerOnChange(fn: any): void {
@@ -86,12 +101,19 @@ export class DatePicker implements ControlValueAccessor, Validator {
 
   validate(control: AbstractControl): ValidationErrors | null {
     const value = control.value;
+    const errors: ValidationErrors = {};
 
     if (!value) {
       return null;
     }
 
-    const errors: ValidationErrors = {};
+    if (!DateUtils.isValidDateString(value)) {
+      errors['invalidDate'] = {
+        actual: value,
+        message: 'تاريخ غير صحيح',
+      };
+      return errors;
+    }
 
     if (this.maxDate() && value > this.maxDate()) {
       errors['maxDate'] = {
@@ -122,7 +144,14 @@ export class DatePicker implements ControlValueAccessor, Validator {
 
   private formatDate(dateString: string): string {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US');
+    return DateUtils.toDisplayString(dateString, 'ar-KW');
+  }
+
+  isDateValid(): boolean {
+    return this.value ? DateUtils.isValidDateString(this.value) : true;
+  }
+
+  getDateValue(): Date | null {
+    return this.value ? new Date(this.value) : null;
   }
 }

@@ -1,8 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TableComponent } from '../../components';
-import { TableService, ToastService } from '../../services';
+import { BaseService, TableService, ToastService } from '../../services';
 import { TableAction, TableColumn, TableStateManager } from '../../interfaces';
+import { DateUtils, CacheUtils } from '../../utils';
 
 // Example data interface
 interface Employee {
@@ -26,6 +27,7 @@ interface Employee {
 export class EmployeeListComponent implements OnInit {
   private tableService = inject(TableService);
   private toastService = inject(ToastService);
+  private baseService = inject(BaseService);
 
   // Table state manager for API data
   tableState!: TableStateManager<Employee>;
@@ -69,6 +71,8 @@ export class EmployeeListComponent implements OnInit {
       sortable: true,
       type: 'date',
       width: '120px',
+      // Using DateUtils for custom formatting
+      format: (value: string) => DateUtils.toDisplayString(value, 'en-US'),
     },
     {
       key: 'isActive',
@@ -117,6 +121,9 @@ export class EmployeeListComponent implements OnInit {
   ];
 
   ngOnInit() {
+    // Log cache status for debugging
+    this.logCacheStatus();
+
     // For demonstration with static data
     this.initializeWithStaticData();
 
@@ -139,7 +146,20 @@ export class EmployeeListComponent implements OnInit {
 
   // Initialize with static data (for demo/development)
   private initializeWithStaticData() {
-    const demoData: Employee[] = [
+    const demoData: Employee[] = this.generateDemoEmployees();
+
+    // Use static table state for demo
+    this.tableState = this.tableService.createStaticTableState(demoData, {
+      page: 1,
+      pageSize: 10,
+      sortBy: 'name',
+      sortDirection: 'asc',
+    });
+  }
+
+  // Generate demo employees with properly formatted dates
+  private generateDemoEmployees(): Employee[] {
+    const employees: Employee[] = [
       {
         id: 1,
         civilId: '123456789012',
@@ -147,7 +167,7 @@ export class EmployeeListComponent implements OnInit {
         department: 'تكنولوجيا المعلومات',
         position: 'مطور أول',
         salary: 2500,
-        joinDate: '2020-01-15',
+        joinDate: DateUtils.toDateString(new Date('2020-01-15')),
         isActive: true,
         email: 'ahmad@pifss.gov.kw',
       },
@@ -158,7 +178,7 @@ export class EmployeeListComponent implements OnInit {
         department: 'الموارد البشرية',
         position: 'مدير موارد بشرية',
         salary: 3000,
-        joinDate: '2019-06-20',
+        joinDate: DateUtils.toDateString(new Date('2019-06-20')),
         isActive: true,
         email: 'fatima@pifss.gov.kw',
       },
@@ -169,7 +189,7 @@ export class EmployeeListComponent implements OnInit {
         department: 'المالية',
         position: 'محاسب',
         salary: 2200,
-        joinDate: '2021-03-10',
+        joinDate: DateUtils.toDateString(new Date('2021-03-10')),
         isActive: false,
         email: 'mohammed@pifss.gov.kw',
       },
@@ -180,7 +200,7 @@ export class EmployeeListComponent implements OnInit {
         department: 'تكنولوجيا المعلومات',
         position: 'محلل نظم',
         salary: 2300,
-        joinDate: '2020-08-01',
+        joinDate: DateUtils.toDateString(new Date('2020-08-01')),
         isActive: true,
         email: 'noura@pifss.gov.kw',
       },
@@ -191,7 +211,7 @@ export class EmployeeListComponent implements OnInit {
         department: 'العمليات',
         position: 'مدير عمليات',
         salary: 3200,
-        joinDate: '2018-04-15',
+        joinDate: DateUtils.toDateString(new Date('2018-04-15')),
         isActive: true,
         email: 'khalid@pifss.gov.kw',
       },
@@ -202,7 +222,7 @@ export class EmployeeListComponent implements OnInit {
         department: 'الموارد البشرية',
         position: 'أخصائي موارد بشرية',
         salary: 2100,
-        joinDate: '2021-11-20',
+        joinDate: DateUtils.toDateString(new Date('2021-11-20')),
         isActive: true,
         email: 'mariam@pifss.gov.kw',
       },
@@ -213,7 +233,7 @@ export class EmployeeListComponent implements OnInit {
         department: 'المالية',
         position: 'مدير مالي',
         salary: 3500,
-        joinDate: '2017-02-10',
+        joinDate: DateUtils.toDateString(new Date('2017-02-10')),
         isActive: true,
         email: 'abdulrahman@pifss.gov.kw',
       },
@@ -224,7 +244,7 @@ export class EmployeeListComponent implements OnInit {
         department: 'تكنولوجيا المعلومات',
         position: 'مطور واجهات',
         salary: 2400,
-        joinDate: '2020-05-15',
+        joinDate: DateUtils.toDateString(new Date('2020-05-15')),
         isActive: true,
         email: 'huda@pifss.gov.kw',
       },
@@ -235,7 +255,7 @@ export class EmployeeListComponent implements OnInit {
         department: 'العمليات',
         position: 'محلل عمليات',
         salary: 2200,
-        joinDate: '2021-09-01',
+        joinDate: DateUtils.toDateString(new Date('2021-09-01')),
         isActive: false,
         email: 'salem@pifss.gov.kw',
       },
@@ -246,7 +266,7 @@ export class EmployeeListComponent implements OnInit {
         department: 'الموارد البشرية',
         position: 'منسق تدريب',
         salary: 2000,
-        joinDate: '2022-01-15',
+        joinDate: DateUtils.toDateString(new Date('2022-01-15')),
         isActive: true,
         email: 'latifa@pifss.gov.kw',
       },
@@ -257,7 +277,7 @@ export class EmployeeListComponent implements OnInit {
         department: 'تكنولوجيا المعلومات',
         position: 'مهندس شبكات',
         salary: 2600,
-        joinDate: '2019-03-20',
+        joinDate: DateUtils.toDateString(new Date('2019-03-20')),
         isActive: true,
         email: 'yousef@pifss.gov.kw',
       },
@@ -268,19 +288,13 @@ export class EmployeeListComponent implements OnInit {
         department: 'المالية',
         position: 'محاسب أول',
         salary: 2400,
-        joinDate: '2020-10-05',
+        joinDate: DateUtils.toDateString(new Date('2020-10-05')),
         isActive: true,
         email: 'aisha@pifss.gov.kw',
       },
     ];
 
-    // Use static table state for demo
-    this.tableState = this.tableService.createStaticTableState(demoData, {
-      page: 1,
-      pageSize: 10,
-      sortBy: 'name',
-      sortDirection: 'asc',
-    });
+    return employees;
   }
 
   // Event handlers
@@ -306,7 +320,6 @@ export class EmployeeListComponent implements OnInit {
 
   onSelectionChange(selected: Employee[]) {
     console.log('Selection changed:', selected);
-    this.toastService.showSuccess(`تم تحديد ${selected.length} موظف`);
   }
 
   onRowClick(row: Employee) {
@@ -316,14 +329,19 @@ export class EmployeeListComponent implements OnInit {
 
   onRefresh() {
     console.log('Refreshing data...');
+
+    // Clear cache for employees endpoint if using API
+    if (CacheUtils.isCachingEnabled()) {
+      this.baseService.clearCacheForUrl('/api/employees');
+      console.log('Cache cleared for employees');
+    }
+
     this.tableState.refresh();
     this.toastService.showSuccess('تم تحديث البيانات');
   }
 
   // Action handlers
   viewEmployee(employee: Employee) {
-    console.log('View employee:', employee);
-    this.toastService.showSuccess(`عرض بيانات: ${employee.name}`);
     // Navigate to employee details page
   }
 
@@ -336,9 +354,39 @@ export class EmployeeListComponent implements OnInit {
   deleteEmployee(employee: Employee) {
     console.log('Delete employee:', employee);
     if (confirm(`هل تريد حذف الموظف: ${employee.name}؟`)) {
+      // Invalidate cache for employees when deleting
+      this.baseService.invalidateCacheForResource('employees');
+
       this.toastService.showSuccess(`تم حذف: ${employee.name}`);
       // Call delete API
       this.tableState.refresh();
     }
+  }
+
+  // Cache management methods
+  private logCacheStatus() {
+    if (CacheUtils.isCachingEnabled()) {
+      console.log('Cache is enabled');
+      const cacheStats = this.baseService.getCacheStats();
+      console.log('Cache statistics:', cacheStats);
+      console.log('Cache duration:', this.baseService.getCacheDurationInfo());
+    } else {
+      console.log('Cache is disabled');
+    }
+  }
+
+  // Method to force clear all cache (useful for debugging)
+  clearAllCache() {
+    this.baseService.clearCache();
+    this.toastService.showSuccess('تم مسح الذاكرة المؤقتة');
+    this.tableState.refresh();
+  }
+
+  // Method to get date range parameters for API filtering
+  getDateRangeParams(startDate?: Date | string, endDate?: Date | string) {
+    return {
+      ...DateUtils.createDateParams(startDate, 'StartDate'),
+      ...DateUtils.createDateParams(endDate, 'EndDate'),
+    };
   }
 }

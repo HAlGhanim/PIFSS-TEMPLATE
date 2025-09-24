@@ -146,6 +146,7 @@
           <!-- Phone Field -->
           <app-form-field
             label="رقم الهاتف"
+            [required]="true"
             hint="مثال: 99999999"
             [showError]="hasError('phone')"
             [errorMessage]="getErrorMessage('phone')"

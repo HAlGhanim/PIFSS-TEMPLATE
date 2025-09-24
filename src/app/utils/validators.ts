@@ -18,12 +18,23 @@ export class CustomValidators {
       const startDate = formGroup.get(startDateField)?.value;
       const endDate = formGroup.get(endDateField)?.value;
 
+      // If either date is empty, skip validation (let required handle it)
       if (!startDate || !endDate) return null;
 
       const start = new Date(startDate);
       const end = new Date(endDate);
 
-      return start <= end ? null : { dateRange: true };
+      // Check if dates are valid
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return null;
+      }
+
+      // Set error on the form group if end date is before start date
+      if (start > end) {
+        return { dateRange: true };
+      }
+
+      return null;
     };
   }
 
@@ -87,6 +98,46 @@ export class CustomValidators {
     };
   }
 
+  // Kuwait Dinar validator (positive number, whole or exactly 3 decimal places)
+  static kuwaitDinar(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      if (value === null || value === undefined || value === '') return null;
+
+      // Convert to string to check format
+      const strValue = value.toString();
+
+      // Regex for Kuwait Dinar: positive whole number OR number with exactly 3 decimal places
+      // Valid: 100, 100.000, 100.123, 0.500
+      // Invalid: 100.0, 100.00, 100.1, 100.12
+      const dinarRegex = /^(?!0+(?:\.0+)?$)(\d+|\d+\.\d{3})$/;
+
+      // Check if it matches the format
+      if (!dinarRegex.test(strValue)) {
+        return { kuwaitDinar: true };
+      }
+
+      // Check if the number is greater than 0
+      const numValue = Number(value);
+      if (numValue <= 0) {
+        return { kuwaitDinar: true };
+      }
+
+      return null;
+    };
+  }
+
+  // Kuwait phone number validator
+  static KuwaitPhoneNumber(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      if (value === null || value === undefined || value === '') return null;
+
+      const phoneRegex = /^[0-9]{8}$/;
+      return phoneRegex.test(value) ? null : { KuwaitPhoneNumber: true };
+    };
+  }
+
   // File type validator
   static fileType(allowedTypes: string[]): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -120,6 +171,7 @@ export class CustomValidators {
     };
   }
 }
+
 export const VALIDATION_MESSAGES = {
   required: 'هذا الحقل مطلوب',
   email: 'يرجى إدخال بريد إلكتروني صحيح',
@@ -127,13 +179,18 @@ export const VALIDATION_MESSAGES = {
   maxlength: 'الحد الأقصى للأحرف هو {requiredLength}',
   min: 'القيمة يجب أن تكون أكبر من أو تساوي {min}',
   max: 'القيمة يجب أن تكون أقل من أو تساوي {max}',
-  pattern: 'يرجى إدخال قيمة صحيحة',
+  pattern: 'يرجى إدخال رقم هاتف صحيح (8 أرقام)',
   kuwaitCivilId:
     'يرجى إدخال رقم مدني كويتي صحيح (12 رقمًا يبدأ بـ 1 أو 2 أو 3)',
+  KuwaitPhoneNumber: 'يرجى إدخال رقم هاتف كويتي صحيح (8 أرقام)',
+  kuwaitDinar:
+    'يرجى إدخال مبلغ صحيح بالدينار الكويتي (رقم صحيح أو رقم بثلاث خانات عشرية فقط)',
   gccRegistrationNumber: 'يرجى إدخال رقم تسجيل صحيح (7 أرقام)',
   dateRange: 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية',
   futureDate: 'يجب أن يكون التاريخ في المستقبل',
   pastDate: 'يجب أن يكون التاريخ في الماضي',
+  maxDate: 'التاريخ يجب أن يكون قبل أو يساوي {max}',
+  minDate: 'التاريخ يجب أن يكون بعد أو يساوي {min}',
   arabicText: 'يرجى إدخال نص باللغة العربية فقط',
   englishText: 'يرجى إدخال نص باللغة الإنجليزية فقط',
   positiveNumber: 'يجب أن تكون القيمة رقم موجب',
@@ -187,8 +244,19 @@ export class FormHelpers {
   }
 
   // Check if form has specific error
-  static hasError(control: AbstractControl | null, errorName: string): boolean {
-    return !!(control?.hasError(errorName) && control?.touched);
+  static hasError(
+    control: AbstractControl | null,
+    errorName?: string
+  ): boolean {
+    if (!control) return false;
+
+    // If no specific error name provided, check if control is invalid and touched
+    if (!errorName) {
+      return !!(control.invalid && control.touched);
+    }
+
+    // Check for specific error
+    return !!(control.hasError(errorName) && control.touched);
   }
 }
 

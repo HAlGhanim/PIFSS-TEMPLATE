@@ -12,7 +12,12 @@ import {
   ContainerComponent,
 } from '../../components';
 import { ToastService } from '../../services';
-import { CustomValidators } from '../../utils';
+import {
+  CustomValidators,
+  FormHelpers,
+  DateUtils,
+  VALIDATION_MESSAGES,
+} from '../../utils';
 
 @Component({
   selector: 'app-showcase',
@@ -37,7 +42,9 @@ export class ShowcaseComponent {
 
   isSubmitting = signal(false);
   isDownloading = signal(false);
-  today = new Date().toISOString().split('T')[0];
+
+  // Using DateUtils to get today's date in correct format
+  today = DateUtils.toDateString(new Date());
 
   departmentGroups = [
     {
@@ -66,8 +73,8 @@ export class ShowcaseComponent {
       department: ['', Validators.required],
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
-      amount: ['', [Validators.required, CustomValidators.positiveNumber()]],
-      phone: ['', [Validators.pattern(/^[0-9]{8}$/)]],
+      amount: ['', [Validators.required, CustomValidators.kuwaitDinar()]],
+      phone: ['', [Validators.required, CustomValidators.KuwaitPhoneNumber()]],
       notes: [''],
     },
     {
@@ -75,46 +82,102 @@ export class ShowcaseComponent {
     }
   );
 
+  // Using FormHelpers for error checking
   hasError(fieldName: string): boolean {
-    const control = this.form.get(fieldName);
-    return !!(control?.invalid && control?.touched);
+    if (fieldName === 'endDate') {
+      const control = this.form.get(fieldName);
+      const startDateControl = this.form.get('startDate');
+
+      if (
+        this.form.errors?.['dateRange'] &&
+        control?.touched &&
+        startDateControl?.touched &&
+        startDateControl?.value &&
+        control?.value
+      ) {
+        return true;
+      }
+    }
+
+    return FormHelpers.hasError(this.form.get(fieldName));
   }
 
+  // Using FormHelpers for error messages
   getErrorMessage(fieldName: string): string {
     const control = this.form.get(fieldName);
-    if (!control?.errors || !control?.touched) return '';
 
-    const errors = control.errors;
-    const errorKey = Object.keys(errors)[0];
+    if (
+      fieldName === 'endDate' &&
+      this.form.errors?.['dateRange'] &&
+      control?.touched
+    ) {
+      return VALIDATION_MESSAGES['dateRange'];
+    }
 
-    const errorMessages: { [key: string]: string } = {
-      required: 'هذا الحقل مطلوب',
-      email: 'يرجى إدخال بريد إلكتروني صحيح',
-      minlength: `الحد الأدنى ${errors['minlength']?.requiredLength} أحرف`,
-      pattern: 'يرجى إدخال قيمة صحيحة',
-      kuwaitCivilId: 'يرجى إدخال رقم مدني كويتي صحيح (12 رقم)',
-      positiveNumber: 'يجب أن تكون القيمة رقم موجب',
-      dateRange: 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية',
-    };
+    if (!control || !control.errors || !control.touched) return '';
 
-    return errorMessages[errorKey] || 'قيمة غير صحيحة';
+    return FormHelpers.getErrorMessage(control, fieldName);
   }
 
   onSubmit() {
+    console.log('Form Valid:', this.form.valid);
+    console.log('Form Errors:', this.form.errors);
+    console.log('Form Values:', this.form.value);
+
+    Object.keys(this.form.controls).forEach((key) => {
+      const control = this.form.get(key);
+      if (control?.errors) {
+        console.log(`${key} errors:`, control.errors);
+      }
+    });
+
     if (this.form.valid) {
       this.isSubmitting.set(true);
 
+      // Convert dates using DateUtils before sending to API
+      const formData = {
+        ...this.form.value,
+        startDate: DateUtils.toOptionalDateString(this.form.value.startDate),
+        endDate: DateUtils.toOptionalDateString(this.form.value.endDate),
+      };
+
       // Simulate API call
       setTimeout(() => {
-        console.log('Form Data:', this.form.value);
-        this.toastService.showSuccess('تم إرسال النموذج بنجاح!');
+        console.log('Sending Form Data:', formData);
+
+        // Format dates for display in success message
+        const dateRange = DateUtils.formatDateRange(
+          this.form.value.startDate,
+          this.form.value.endDate,
+          'ar-KW'
+        );
+
+        this.toastService.showSuccess(
+          `تم إرسال النموذج بنجاح! الفترة: ${dateRange}`
+        );
         this.isSubmitting.set(false);
+
+        // Optionally reset the form after successful submission
+        // this.onReset();
       }, 2000);
     } else {
-      // Mark all fields as touched to show errors
+      // Using FormHelpers to mark all fields as touched
+      FormHelpers.markFormGroupTouched(this.form);
+
+      // Show specific errors for debugging
+      const errors: string[] = [];
       Object.keys(this.form.controls).forEach((key) => {
-        this.form.get(key)?.markAsTouched();
+        const control = this.form.get(key);
+        if (control?.errors) {
+          errors.push(`${key}: ${this.getErrorMessage(key)}`);
+        }
       });
+
+      if (this.form.errors?.['dateRange']) {
+        errors.push('تاريخ النهاية يجب أن يكون بعد تاريخ البداية');
+      }
+
+      console.log('Form validation errors:', errors);
       this.toastService.showError('يرجى تصحيح الأخطاء في النموذج');
     }
   }
@@ -130,7 +193,20 @@ export class ShowcaseComponent {
   }
 
   onReset() {
-    this.form.reset();
+    // Using FormHelpers to properly reset the form
+    const initialValues = {
+      civilId: '',
+      fullName: '',
+      email: '',
+      department: '',
+      startDate: '',
+      endDate: '',
+      amount: '',
+      phone: '',
+      notes: '',
+    };
+
+    FormHelpers.resetForm(this.form, initialValues);
     this.toastService.showSuccess('تم إعادة تعيين النموذج');
   }
 
@@ -139,5 +215,25 @@ export class ShowcaseComponent {
     setTimeout(() => {
       this.toastService.showError('مثال على رسالة خطأ');
     }, 1000);
+
+    // Show date validation example
+    setTimeout(() => {
+      const today = DateUtils.toDisplayString(new Date(), 'ar-KW');
+      this.toastService.showSuccess(`تاريخ اليوم: ${today}`);
+    }, 2000);
+  }
+
+  // Additional helper method to demonstrate DateUtils validation
+  validateDateInput(dateString: string): boolean {
+    return DateUtils.isValidDateString(dateString);
+  }
+
+  // Method to create date params for API calls
+  getDateParams() {
+    const params = {
+      ...DateUtils.createDateParams(this.form.value.startDate, 'StartDate'),
+      ...DateUtils.createDateParams(this.form.value.endDate, 'EndDate'),
+    };
+    return params;
   }
 }
