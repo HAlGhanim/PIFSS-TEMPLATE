@@ -60,12 +60,27 @@ export class DatePicker implements ControlValueAccessor, Validator {
 
     let correctedValue = inputValue;
 
-    if (inputValue && this.maxDate() && inputValue > this.maxDate()) {
-      correctedValue = this.maxDate();
-    }
+    // Use DateUtils for date comparisons
+    if (inputValue) {
+      const inputDate = DateUtils.safeParseDate(inputValue);
+      const maxDateValue = DateUtils.safeParseDate(this.maxDate());
+      const minDateValue = DateUtils.safeParseDate(this.minDate());
 
-    if (inputValue && this.minDate() && inputValue < this.minDate()) {
-      correctedValue = this.minDate();
+      if (
+        inputDate &&
+        maxDateValue &&
+        DateUtils.isAfter(inputDate, maxDateValue)
+      ) {
+        correctedValue = this.maxDate();
+      }
+
+      if (
+        inputDate &&
+        minDateValue &&
+        DateUtils.isBefore(inputDate, minDateValue)
+      ) {
+        correctedValue = this.minDate();
+      }
     }
 
     if (correctedValue !== inputValue) {
@@ -80,11 +95,8 @@ export class DatePicker implements ControlValueAccessor, Validator {
   }
 
   writeValue(value: any): void {
-    if (value instanceof Date) {
-      this.value = DateUtils.toDateString(value);
-    } else {
-      this.value = value || '';
-    }
+    // Use DateUtils for consistent date string conversion
+    this.value = DateUtils.toOptionalDateString(value) || '';
   }
 
   registerOnChange(fn: any): void {
@@ -107,6 +119,7 @@ export class DatePicker implements ControlValueAccessor, Validator {
       return null;
     }
 
+    // Use DateUtils for validation
     if (!DateUtils.isValidDateString(value)) {
       errors['invalidDate'] = {
         actual: value,
@@ -115,22 +128,37 @@ export class DatePicker implements ControlValueAccessor, Validator {
       return errors;
     }
 
-    if (this.maxDate() && value > this.maxDate()) {
+    // Use DateUtils for date comparisons
+    const valueDate = DateUtils.safeParseDate(value);
+    const maxDateValue = DateUtils.safeParseDate(this.maxDate());
+    const minDateValue = DateUtils.safeParseDate(this.minDate());
+
+    if (
+      valueDate &&
+      maxDateValue &&
+      DateUtils.isAfter(valueDate, maxDateValue)
+    ) {
       errors['maxDate'] = {
         max: this.maxDate(),
         actual: value,
-        message: `التاريخ يجب أن يكون قبل أو يساوي ${this.formatDate(
-          this.maxDate()
+        message: `التاريخ يجب أن يكون قبل أو يساوي ${DateUtils.toDisplayString(
+          this.maxDate(),
+          'ar-KW'
         )}`,
       };
     }
 
-    if (this.minDate() && value < this.minDate()) {
+    if (
+      valueDate &&
+      minDateValue &&
+      DateUtils.isBefore(valueDate, minDateValue)
+    ) {
       errors['minDate'] = {
         min: this.minDate(),
         actual: value,
-        message: `التاريخ يجب أن يكون بعد أو يساوي ${this.formatDate(
-          this.minDate()
+        message: `التاريخ يجب أن يكون بعد أو يساوي ${DateUtils.toDisplayString(
+          this.minDate(),
+          'ar-KW'
         )}`,
       };
     }
@@ -142,16 +170,12 @@ export class DatePicker implements ControlValueAccessor, Validator {
     this.onValidatorChange = fn;
   }
 
-  private formatDate(dateString: string): string {
-    if (!dateString) return '';
-    return DateUtils.toDisplayString(dateString, 'ar-KW');
-  }
-
+  // Helper methods using DateUtils
   isDateValid(): boolean {
     return this.value ? DateUtils.isValidDateString(this.value) : true;
   }
 
   getDateValue(): Date | null {
-    return this.value ? new Date(this.value) : null;
+    return DateUtils.safeParseDate(this.value);
   }
 }

@@ -1,13 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLinkActive, RouterModule } from '@angular/router';
 // import { MsalAuthService } from '../../services/app-services/msal-auth.service';
-import { PifssLogoHComponent } from '../icons/pifss-logo-h/pifss-logo-h.component';
+import { NavigationLink } from '../../interfaces';
+import { PifssLogoComponent } from '../icons/pifss-logo/pifss-logo.component';
+import { SvgIconComponent } from '../icons/svg-icon/svg-icon.component';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterModule, RouterLinkActive, PifssLogoHComponent, CommonModule],
+  imports: [
+    RouterModule,
+    RouterLinkActive,
+    PifssLogoComponent,
+    SvgIconComponent,
+    CommonModule,
+  ],
   templateUrl: './navbar.component.html',
   styles: [
     `
@@ -37,46 +45,76 @@ import { PifssLogoHComponent } from '../icons/pifss-logo-h/pifss-logo-h.componen
   ],
 })
 export class NavbarComponent {
-  //uncomment once msal is configured
+  // Uncomment once msal is configured
   // authService = inject(MsalAuthService);
   private router = inject(Router);
 
-  links = [
+  // Navigation links configuration
+  links: NavigationLink[] = [
     {
-      label: 'showcase',
+      label: 'عرض المكونات',
       path: '/showcase',
-      icon: 'WHATEVER',
+      icon: 'globe',
+      // badge: 'جديد',
+      // badgeColor: 'success'
     },
     {
-      label: 'employee list',
+      label: 'قائمة الموظفين',
       path: '/employee-list',
-      icon: 'WHATEVER2',
+      icon: 'users',
+      // badge: 12,
+      // badgeColor: 'primary'
     },
+    // Example with children (sub-menu)
+    // {
+    //   label: 'التقارير',
+    //   path: '/reports',
+    //   icon: 'document',
+    //   children: [
+    //     {
+    //       label: 'تقرير شهري',
+    //       path: '/reports/monthly',
+    //       icon: 'chevronLeft'
+    //     },
+    //     {
+    //       label: 'تقرير سنوي',
+    //       path: '/reports/annual',
+    //       icon: 'chevronLeft'
+    //     }
+    //   ]
+    // }
   ];
+
+  filteredLinks = computed(() => {
+    return this.links.filter((link) => !link.disabled);
+  });
 
   logout() {
     // this.authService.logoutRedirect();
   }
 
-  // getUserInitials(): string {
-  //   const name = this.authService.getUserDisplayName();
+  getUserInitials(): string {
+    // Uncomment and use when MSAL is configured
+    // const name = this.authService.getUserDisplayName();
 
-  //   if (!name) return 'U';
+    const name = 'User'; // Placeholder
 
-  //   const arabicRegex = /[\u0600-\u06FF]/;
-  //   const hasArabic = arabicRegex.test(name);
+    if (!name) return 'U';
 
-  //   if (hasArabic) {
-  //     const arabicPart = name.match(/[\u0600-\u06FF\s]+/)?.[0]?.trim();
-  //     if (arabicPart) {
-  //       return arabicPart[0];
-  //     }
-  //   }
+    const arabicRegex = /[\u0600-\u06FF]/;
+    const hasArabic = arabicRegex.test(name);
 
-  //   return name.trim()[0].toUpperCase();
-  // }
+    if (hasArabic) {
+      const arabicPart = name.match(/[\u0600-\u06FF\s]+/)?.[0]?.trim();
+      if (arabicPart) {
+        return arabicPart[0];
+      }
+    }
+
+    return name.trim()[0].toUpperCase();
+  }
 
   isActiveRoute(path: string): boolean {
-    return this.router.url === path;
+    return this.router.url.startsWith(path);
   }
 }

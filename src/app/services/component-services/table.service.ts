@@ -16,6 +16,7 @@ import {
   TableStateManager,
 } from '../../interfaces';
 import { BaseService } from '../api-services/base.service';
+import { HttpParamsUtils } from '../../utils/http-params.utils';
 
 @Injectable({
   providedIn: 'root',
@@ -164,38 +165,7 @@ export class TableService extends BaseService {
    * Build HttpParams from table query parameters
    */
   buildHttpParams(params: TableQueryParams): HttpParams {
-    let httpParams = new HttpParams();
-
-    if (params.page) {
-      httpParams = httpParams.set('page', params.page.toString());
-    }
-
-    if (params.pageSize) {
-      httpParams = httpParams.set('pageSize', params.pageSize.toString());
-    }
-
-    if (params.sortBy) {
-      httpParams = httpParams.set('sortBy', params.sortBy);
-      httpParams = httpParams.set(
-        'sortDirection',
-        params.sortDirection || 'asc'
-      );
-    }
-
-    if (params.search) {
-      httpParams = httpParams.set('search', params.search);
-    }
-
-    if (params.filters) {
-      Object.keys(params.filters).forEach((key) => {
-        const value = params.filters![key];
-        if (value !== null && value !== undefined && value !== '') {
-          httpParams = httpParams.set(key, value.toString());
-        }
-      });
-    }
-
-    return httpParams;
+    return HttpParamsUtils.buildTableParams(params);
   }
 
   /**

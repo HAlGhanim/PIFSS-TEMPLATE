@@ -11,13 +11,8 @@ import {
   PageHeaderComponent,
   ContainerComponent,
 } from '../../components';
-import { ToastService } from '../../services';
-import {
-  CustomValidators,
-  FormHelpers,
-  DateUtils,
-  VALIDATION_MESSAGES,
-} from '../../utils';
+import { ToastService, DateService } from '../../services';
+import { CustomValidators, FormHelpers, ErrorMessageUtils } from '../../utils';
 
 @Component({
   selector: 'app-showcase',
@@ -39,12 +34,13 @@ import {
 export class ShowcaseComponent {
   private fb = inject(FormBuilder);
   public toastService = inject(ToastService);
+  private dateService = inject(DateService);
 
   isSubmitting = signal(false);
   isDownloading = signal(false);
 
-  // Using DateUtils to get today's date in correct format
-  today = DateUtils.toDateString(new Date());
+  // Using DateService instead of DateUtils directly
+  today = this.dateService.getToday();
 
   departmentGroups = [
     {
@@ -82,41 +78,31 @@ export class ShowcaseComponent {
     }
   );
 
-  // Using FormHelpers for error checking
+  // Using ErrorMessageUtils for centralized error checking
   hasError(fieldName: string): boolean {
+    // Special handling for endDate field with dateRange validation
     if (fieldName === 'endDate') {
-      const control = this.form.get(fieldName);
-      const startDateControl = this.form.get('startDate');
-
-      if (
-        this.form.errors?.['dateRange'] &&
-        control?.touched &&
-        startDateControl?.touched &&
-        startDateControl?.value &&
-        control?.value
-      ) {
-        return true;
-      }
+      return ErrorMessageUtils.fieldHasError(this.form, fieldName, [
+        'dateRange',
+      ]);
     }
 
-    return FormHelpers.hasError(this.form.get(fieldName));
+    return ErrorMessageUtils.hasError(this.form.get(fieldName));
   }
 
-  // Using FormHelpers for error messages
+  // Using ErrorMessageUtils for centralized error messages
   getErrorMessage(fieldName: string): string {
-    const control = this.form.get(fieldName);
-
-    if (
-      fieldName === 'endDate' &&
-      this.form.errors?.['dateRange'] &&
-      control?.touched
-    ) {
-      return VALIDATION_MESSAGES['dateRange'];
+    // Special handling for endDate field with dateRange validation
+    if (fieldName === 'endDate') {
+      return ErrorMessageUtils.getFormFieldError(this.form, fieldName, [
+        'dateRange',
+      ]);
     }
 
-    if (!control || !control.errors || !control.touched) return '';
-
-    return FormHelpers.getErrorMessage(control, fieldName);
+    return ErrorMessageUtils.getErrorMessage(
+      this.form.get(fieldName),
+      fieldName
+    );
   }
 
   onSubmit() {
@@ -124,6 +110,7 @@ export class ShowcaseComponent {
     console.log('Form Errors:', this.form.errors);
     console.log('Form Values:', this.form.value);
 
+    // Log individual control errors for debugging
     Object.keys(this.form.controls).forEach((key) => {
       const control = this.form.get(key);
       if (control?.errors) {
@@ -134,19 +121,19 @@ export class ShowcaseComponent {
     if (this.form.valid) {
       this.isSubmitting.set(true);
 
-      // Convert dates using DateUtils before sending to API
+      // Convert dates using DateService before sending to API
       const formData = {
         ...this.form.value,
-        startDate: DateUtils.toOptionalDateString(this.form.value.startDate),
-        endDate: DateUtils.toOptionalDateString(this.form.value.endDate),
+        startDate: this.dateService.toApiFormat(this.form.value.startDate),
+        endDate: this.dateService.toApiFormat(this.form.value.endDate),
       };
 
       // Simulate API call
       setTimeout(() => {
         console.log('Sending Form Data:', formData);
 
-        // Format dates for display in success message
-        const dateRange = DateUtils.formatDateRange(
+        // Format dates for display using DateService
+        const dateRange = this.dateService.formatRange(
           this.form.value.startDate,
           this.form.value.endDate,
           'ar-KW'
@@ -164,18 +151,8 @@ export class ShowcaseComponent {
       // Using FormHelpers to mark all fields as touched
       FormHelpers.markFormGroupTouched(this.form);
 
-      // Show specific errors for debugging
-      const errors: string[] = [];
-      Object.keys(this.form.controls).forEach((key) => {
-        const control = this.form.get(key);
-        if (control?.errors) {
-          errors.push(`${key}: ${this.getErrorMessage(key)}`);
-        }
-      });
-
-      if (this.form.errors?.['dateRange']) {
-        errors.push('تاريخ النهاية يجب أن يكون بعد تاريخ البداية');
-      }
+      // Use ErrorMessageUtils to get all errors
+      const errors = ErrorMessageUtils.getAllFormErrors(this.form);
 
       console.log('Form validation errors:', errors);
       this.toastService.showError('يرجى تصحيح الأخطاء في النموذج');
@@ -216,24 +193,61 @@ export class ShowcaseComponent {
       this.toastService.showError('مثال على رسالة خطأ');
     }, 1000);
 
-    // Show date validation example
+    // Show date validation example using DateService
     setTimeout(() => {
-      const today = DateUtils.toDisplayString(new Date(), 'ar-KW');
+      const today = this.dateService.formatForDisplay(new Date(), 'ar-KW');
       this.toastService.showSuccess(`تاريخ اليوم: ${today}`);
     }, 2000);
   }
 
-  // Additional helper method to demonstrate DateUtils validation
+  // Additional helper method using DateService for validation
   validateDateInput(dateString: string): boolean {
-    return DateUtils.isValidDateString(dateString);
+    return this.dateService.isValid(dateString);
   }
 
-  // Method to create date params for API calls
+  // Method to create date params for API calls using DateService
   getDateParams() {
-    const params = {
-      ...DateUtils.createDateParams(this.form.value.startDate, 'StartDate'),
-      ...DateUtils.createDateParams(this.form.value.endDate, 'EndDate'),
-    };
-    return params;
+    return this.dateService.createRangeParams(
+      this.form.value.startDate,
+      this.form.value.endDate,
+      'StartDate',
+      'EndDate'
+    );
+  }
+
+  // Additional convenient date methods using DateService
+  getDateRangeInfo(): string | null {
+    const days = this.dateService.getDaysBetween(
+      this.form.value.startDate,
+      this.form.value.endDate
+    );
+
+    if (days !== null) {
+      return `عدد الأيام: ${days} يوم`;
+    }
+    return null;
+  }
+
+  // Check if selected date range is valid for business rules
+  isDateRangeValid(): boolean {
+    const startDate = this.form.value.startDate;
+    const endDate = this.form.value.endDate;
+
+    if (!startDate || !endDate) return true; // Let required validator handle empty values
+
+    // Example business rule: Date range cannot exceed 1 year
+    const days = this.dateService.getDaysBetween(startDate, endDate);
+    if (days && days > 365) {
+      this.toastService.showError('لا يمكن أن تتجاوز الفترة سنة واحدة');
+      return false;
+    }
+
+    // Example business rule: Start date cannot be in the future
+    if (this.dateService.isFuture(startDate)) {
+      this.toastService.showError('تاريخ البداية لا يمكن أن يكون في المستقبل');
+      return false;
+    }
+
+    return true;
   }
 }

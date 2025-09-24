@@ -8,7 +8,7 @@ import {
 import {
   SelectOption,
   SelectOptionGroup,
-} from '../../../interfaces/select/select-option.interface';
+} from '../../../interfaces/component-interfaces/select-option.interface';
 
 @Component({
   selector: 'app-form-select-group',

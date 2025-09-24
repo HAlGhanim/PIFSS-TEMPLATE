@@ -1,7 +1,7 @@
-import { Component, input, computed, contentChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, computed, contentChild, input } from '@angular/core';
 import { NgControl } from '@angular/forms';
-import { VALIDATION_MESSAGES, FormHelpers } from '../../../utils/validators';
+import { FormHelpers, ErrorMessageUtils } from '../../../utils';
 
 @Component({
   selector: 'app-form-field',
@@ -33,29 +33,13 @@ export class FormFieldComponent {
   });
 
   computedErrorMessage = computed(() => {
+    // Use provided error message if available
     if (this.errorMessage()) {
       return this.errorMessage();
     }
 
+    // Use centralized error message utility
     const ctrl = this.control();
-    if (!ctrl?.errors) return '';
-
-    const errors = ctrl.errors;
-    const errorKey = Object.keys(errors)[0];
-    const errorValue = errors[errorKey];
-    let message =
-      VALIDATION_MESSAGES[errorKey as keyof typeof VALIDATION_MESSAGES] ||
-      'قيمة غير صحيحة';
-
-    if (typeof errorValue === 'object' && errorValue !== null) {
-      Object.keys(errorValue).forEach((key) => {
-        const value = errorValue[key];
-        if (value !== null && value !== undefined) {
-          message = message.replace(`{${key}}`, value.toString());
-        }
-      });
-    }
-
-    return message;
+    return ErrorMessageUtils.getErrorMessage(ctrl?.control ?? null);
   });
 }
