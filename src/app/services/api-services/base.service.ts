@@ -1,4 +1,3 @@
-// src/app/services/api-services/base.service.ts
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, shareReplay, tap } from 'rxjs';
@@ -77,6 +76,23 @@ export class BaseService {
     CacheUtils.cleanupExpiredCache(this.cache, this.CACHE_DURATION_MS);
 
     return request$;
+  }
+
+  /**
+   * Optional: Get a request without caching
+   * Useful when you need fresh data regardless of cache
+   */
+  getFresh<ResponseType>(
+    url: string,
+    headers?: any,
+    params?: any
+  ): Observable<ResponseType> {
+    CacheUtils.logCacheEvent('miss', url);
+
+    return this._http.get<ResponseType>(this.baseUrl + url, {
+      headers,
+      params,
+    });
   }
 
   /**
@@ -201,23 +217,6 @@ export class BaseService {
     expiredCount: number;
   } {
     return CacheUtils.getCacheStats(this.cache);
-  }
-
-  /**
-   * Optional: Get a request without caching
-   * Useful when you need fresh data regardless of cache
-   */
-  getFresh<ResponseType>(
-    url: string,
-    headers?: any,
-    params?: any
-  ): Observable<ResponseType> {
-    CacheUtils.logCacheEvent('miss', url);
-
-    return this._http.get<ResponseType>(this.baseUrl + url, {
-      headers,
-      params,
-    });
   }
 
   /**

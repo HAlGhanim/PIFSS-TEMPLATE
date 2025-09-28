@@ -1,10 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, forwardRef, input, signal } from '@angular/core';
-import {
-  ControlValueAccessor,
-  NG_VALIDATORS,
-  NG_VALUE_ACCESSOR,
-} from '@angular/forms';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 @Component({
   selector: 'app-form-input',

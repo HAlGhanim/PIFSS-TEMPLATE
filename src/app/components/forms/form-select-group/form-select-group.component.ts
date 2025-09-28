@@ -5,10 +5,7 @@ import {
   NG_VALUE_ACCESSOR,
   ReactiveFormsModule,
 } from '@angular/forms';
-import {
-  SelectOption,
-  SelectOptionGroup,
-} from '../../../interfaces/component-interfaces/select-option.interface';
+import { SelectOption, SelectOptionGroup } from '../../../interfaces';
 
 @Component({
   selector: 'app-form-select-group',

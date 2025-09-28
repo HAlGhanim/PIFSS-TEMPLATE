@@ -1,14 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import { TableComponent } from '../../components';
-import { BaseService, TableService, ToastService } from '../../services';
 import { TableAction, TableColumn, TableStateManager } from '../../interfaces';
-import {
-  DateUtils,
-  CacheUtils,
-  TableColumnsBuilder,
-  TableColumnFactory,
-} from '../../utils';
+import { BaseService, TableService, ToastService } from '../../services';
+import { CacheUtils, DateUtils, TableColumnsBuilder } from '../../utils';
 
 // Example data interface
 interface Employee {

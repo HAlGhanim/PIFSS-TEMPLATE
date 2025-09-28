@@ -20,7 +20,6 @@ import { IconService } from '../../../services';
 export class SvgIconComponent {
   private iconService = inject(IconService);
 
-  // Inputs
   name = input<string>('');
   width = input<number>(24);
   height = input<number>(24);
