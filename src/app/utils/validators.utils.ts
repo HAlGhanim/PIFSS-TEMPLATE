@@ -1,4 +1,6 @@
+// src/app/utils/validators.utils.ts
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { getCountryByCode } from '.';
 
 export class CustomValidators {
   // Validate Kuwait Civil ID (12 digits)
@@ -127,15 +129,60 @@ export class CustomValidators {
     };
   }
 
-  // Kuwait phone number validator
-  static KuwaitPhoneNumber(): ValidatorFn {
+  // GCC Phone number validator - NEW
+  static gccPhoneNumber(countryCode?: string): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value;
       if (value === null || value === undefined || value === '') return null;
 
-      const phoneRegex = /^[0-9]{8}$/;
-      return phoneRegex.test(value) ? null : { KuwaitPhoneNumber: true };
+      // If no country code provided, try to detect from the number
+      let country = countryCode ? getCountryByCode(countryCode) : null;
+
+      if (!country) {
+        // Try to detect country from phone prefix
+        const cleaned = value.replace(/[\s\-\(\)]/g, '');
+        if (cleaned.startsWith('+965') || cleaned.startsWith('00965')) {
+          country = getCountryByCode('KW');
+        } else if (cleaned.startsWith('+966') || cleaned.startsWith('00966')) {
+          country = getCountryByCode('SA');
+        } else if (cleaned.startsWith('+971') || cleaned.startsWith('00971')) {
+          country = getCountryByCode('AE');
+        } else if (cleaned.startsWith('+974') || cleaned.startsWith('00974')) {
+          country = getCountryByCode('QA');
+        } else if (cleaned.startsWith('+973') || cleaned.startsWith('00973')) {
+          country = getCountryByCode('BH');
+        } else if (cleaned.startsWith('+968') || cleaned.startsWith('00968')) {
+          country = getCountryByCode('OM');
+        }
+      }
+
+      if (!country) {
+        return {
+          gccPhoneNumber: { message: 'يرجى اختيار دولة أو إدخال رمز الدولة' },
+        };
+      }
+
+      const cleaned = value.replace(/[\s\-\(\)]/g, '');
+      if (!country.phoneRegex.test(cleaned)) {
+        return {
+          gccPhoneNumber: {
+            country: country.arabicName,
+            expectedLength: country.phoneLength,
+            message: `رقم هاتف ${country.arabicName} غير صحيح (${country.phoneLength} أرقام)`,
+          },
+        };
+      }
+
+      return null;
     };
+  }
+
+  // Keep the old validator for backward compatibility but mark as deprecated
+  /**
+   * @deprecated Use gccPhoneNumber('KW') instead
+   */
+  static KuwaitPhoneNumber(): ValidatorFn {
+    return CustomValidators.gccPhoneNumber('KW');
   }
 
   // File type validator
@@ -179,10 +226,11 @@ export const VALIDATION_MESSAGES = {
   maxlength: 'الحد الأقصى للأحرف هو {requiredLength}',
   min: 'القيمة يجب أن تكون أكبر من أو تساوي {min}',
   max: 'القيمة يجب أن تكون أقل من أو تساوي {max}',
-  pattern: 'يرجى إدخال رقم هاتف صحيح (8 أرقام)',
+  pattern: 'يرجى إدخال قيمة صحيحة',
   kuwaitCivilId:
     'يرجى إدخال رقم مدني كويتي صحيح (12 رقمًا يبدأ بـ 1 أو 2 أو 3)',
-  KuwaitPhoneNumber: 'يرجى إدخال رقم هاتف كويتي صحيح (8 أرقام)',
+  gccPhoneNumber: 'رقم الهاتف غير صحيح للدولة المحددة',
+  KuwaitPhoneNumber: 'يرجى إدخال رقم هاتف كويتي صحيح (8 أرقام)', // Keep for backward compatibility
   kuwaitDinar:
     'يرجى إدخال مبلغ صحيح بالدينار الكويتي (رقم صحيح أو رقم بثلاث خانات عشرية فقط)',
   gccRegistrationNumber: 'يرجى إدخال رقم تسجيل صحيح (7 أرقام)',
@@ -259,37 +307,3 @@ export class FormHelpers {
     return !!(control.hasError(errorName) && control.touched);
   }
 }
-
-// Usage Example:
-/*
-import { CustomValidators, FormHelpers } from '@/utils/validators';
-
-// In component:
-createForm() {
-  return this.fb.group({
-    civilId: ['', [Validators.required, CustomValidators.kuwaitCivilId()]],
-    registrationNumber: ['', [Validators.required, CustomValidators.gccRegistrationNumber()]],
-    email: ['', [Validators.required, Validators.email]],
-    startDate: ['', Validators.required],
-    endDate: ['', Validators.required],
-    amount: ['', [Validators.required, CustomValidators.positiveNumber()]],
-  }, {
-    validators: CustomValidators.dateRange('startDate', 'endDate')
-  });
-}
-
-// Get error message
-getError(fieldName: string): string {
-  return FormHelpers.getErrorMessage(this.form.get(fieldName), fieldName);
-}
-
-// In template:
-<app-form-field 
-  label="الرقم المدني" 
-  [required]="true"
-  [showError]="form.get('civilId')?.invalid && form.get('civilId')?.touched"
-  [errorMessage]="getError('civilId')"
->
-  <input type="text" formControlName="civilId" class="form-input" />
-</app-form-field>
-*/

@@ -56,6 +56,7 @@
               formControlName="civilId"
               type="text"
               placeholder="مثال: 123456789012"
+              restriction="civilId"
             ></app-form-input>
           </app-form-field>
 
@@ -70,6 +71,7 @@
               formControlName="fullName"
               type="text"
               placeholder="أدخل الاسم الكامل"
+              restriction="name"
             ></app-form-input>
           </app-form-field>
 
@@ -138,8 +140,9 @@
           >
             <app-form-input
               formControlName="amount"
-              type="number"
+              type="text"
               placeholder="0.000"
+              restriction="amount"
             ></app-form-input>
           </app-form-field>
 

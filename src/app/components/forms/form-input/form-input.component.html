@@ -4,8 +4,11 @@
   [placeholder]="placeholder()"
   [disabled]="isDisabled()"
   [value]="value()"
+  [attr.maxLength]="computedMaxLength()"
   (input)="onInputChange($event)"
-  (blur)="onTouched()"
+  (keypress)="onKeyPress($event)"
+  (paste)="onPaste($event)"
+  (blur)="onBlur()"
   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed placeholder:text-gray-400 placeholder:opacity-85"
   [ngClass]="inputClass()"
 />
