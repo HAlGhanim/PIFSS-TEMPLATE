@@ -13,6 +13,8 @@ import {
 } from '../../components';
 import { DateService, ToastService } from '../../services';
 import { CustomValidators, ErrorMessageUtils, FormHelpers } from '../../utils';
+import { GCC_COUNTRIES, SelectOptionGroup, GCCCountry } from '../../interfaces';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-showcase',
@@ -35,12 +37,29 @@ export class ShowcaseComponent {
   private fb = inject(FormBuilder);
   public toastService = inject(ToastService);
   private dateService = inject(DateService);
+  private sanitizer = inject(DomSanitizer);
 
   isSubmitting = signal(false);
   isDownloading = signal(false);
+  selectedCountry = signal('KW'); // Default to Kuwait
+  showCountryDropdown = signal(false);
 
   // Using DateService instead of DateUtils directly
   today = this.dateService.getToday();
+
+  // GCC Countries for phone selection
+  gccCountries: SelectOptionGroup[] = [
+    {
+      label: 'دول مجلس التعاون الخليجي',
+      options: GCC_COUNTRIES.map((country) => ({
+        value: country.code,
+        label: `${country.arabicName} (${country.phoneCode})`,
+      })),
+    },
+  ];
+
+  // Get all GCC countries for custom dropdown
+  gccCountriesList = GCC_COUNTRIES;
 
   departmentGroups = [
     {
@@ -70,13 +89,76 @@ export class ShowcaseComponent {
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
       amount: ['', [Validators.required, CustomValidators.kuwaitDinar()]],
-      phone: ['', [Validators.required, CustomValidators.KuwaitPhoneNumber()]],
+      phoneCountry: ['KW', Validators.required], // Country selection for phone
+      phone: ['', [Validators.required, CustomValidators.gccPhoneNumber('KW')]], // GCC phone with dynamic country
       notes: [''],
     },
     {
       validators: CustomValidators.dateRange('startDate', 'endDate'),
     }
   );
+
+  constructor() {
+    // Listen to country changes to update phone validation
+    this.form.get('phoneCountry')?.valueChanges.subscribe((country) => {
+      if (country) {
+        this.selectedCountry.set(country);
+        const phoneControl = this.form.get('phone');
+
+        // Clear current phone value
+        phoneControl?.setValue('');
+
+        // Update validators with new country
+        phoneControl?.setValidators([
+          Validators.required,
+          CustomValidators.gccPhoneNumber(country),
+        ]);
+
+        // Revalidate
+        phoneControl?.updateValueAndValidity();
+      }
+    });
+  }
+
+  // Get the current selected country data
+  getSelectedCountryData(): GCCCountry | undefined {
+    return GCC_COUNTRIES.find((c) => c.code === this.selectedCountry());
+  }
+
+  // Select country from custom dropdown
+  selectCountry(countryCode: string) {
+    this.form.get('phoneCountry')?.setValue(countryCode);
+    this.showCountryDropdown.set(false);
+  }
+
+  // Toggle country dropdown
+  toggleCountryDropdown() {
+    this.showCountryDropdown.update((v) => !v);
+  }
+
+  // Get safe SVG HTML
+  getSafeSvg(svgString: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(svgString);
+  }
+
+  // Get phone placeholder based on selected country
+  getPhonePlaceholder(): string {
+    const country = this.getSelectedCountryData();
+    return country ? country.phoneExample : '99999999';
+  }
+
+  // Get phone hint based on selected country
+  getPhoneHint(): string {
+    const country = this.getSelectedCountryData();
+    if (country) {
+      // Special case for UAE with variable length
+      if (country.code === 'AE') {
+        return `مثال: ${country.phoneExample} (7-9 أرقام)`;
+      }
+      return `مثال: ${country.phoneExample} (${country.phoneLength} أرقام)`;
+    }
+    return 'اختر الدولة أولاً';
+  }
 
   // Using ErrorMessageUtils for centralized error checking
   hasError(fieldName: string): boolean {
@@ -97,6 +179,20 @@ export class ShowcaseComponent {
       return ErrorMessageUtils.getFormFieldError(this.form, fieldName, [
         'dateRange',
       ]);
+    }
+
+    // Special handling for phone field to include country-specific message
+    if (fieldName === 'phone') {
+      const control = this.form.get(fieldName);
+      if (control?.errors?.['gccPhoneNumber']) {
+        const country = this.getSelectedCountryData();
+        if (country?.code === 'AE') {
+          return `رقم هاتف ${country.arabicName} يجب أن يحتوي على 7-9 أرقام`;
+        }
+        return `رقم هاتف ${
+          country?.arabicName || 'غير صحيح'
+        } يجب أن يحتوي على ${country?.phoneLength || ''} أرقام`;
+      }
     }
 
     return ErrorMessageUtils.getErrorMessage(
@@ -121,9 +217,18 @@ export class ShowcaseComponent {
     if (this.form.valid) {
       this.isSubmitting.set(true);
 
+      // Format phone number with country code
+      const country = this.getSelectedCountryData();
+      const phoneNumber = this.form.value.phone;
+      const formattedPhone =
+        country && phoneNumber
+          ? `${country.phoneCode} ${phoneNumber}`
+          : phoneNumber;
+
       // Convert dates using DateService before sending to API
       const formData = {
         ...this.form.value,
+        phone: formattedPhone,
         startDate: this.dateService.toApiFormat(this.form.value.startDate),
         endDate: this.dateService.toApiFormat(this.form.value.endDate),
       };
@@ -179,11 +284,13 @@ export class ShowcaseComponent {
       startDate: '',
       endDate: '',
       amount: '',
+      phoneCountry: 'KW', // Reset to Kuwait
       phone: '',
       notes: '',
     };
 
     FormHelpers.resetForm(this.form, initialValues);
+    this.selectedCountry.set('KW');
     this.toastService.showSuccess('تم إعادة تعيين النموذج');
   }
 
@@ -198,6 +305,16 @@ export class ShowcaseComponent {
       const today = this.dateService.formatForDisplay(new Date(), 'ar-KW');
       this.toastService.showSuccess(`تاريخ اليوم: ${today}`);
     }, 2000);
+
+    // Show phone formatting example
+    setTimeout(() => {
+      const country = this.getSelectedCountryData();
+      if (country) {
+        this.toastService.showSuccess(
+          `تم اختيار: ${country.arabicName} ${country.phoneCode}`
+        );
+      }
+    }, 3000);
   }
 
   // Additional helper method using DateService for validation
@@ -249,5 +366,29 @@ export class ShowcaseComponent {
     }
 
     return true;
+  }
+
+  // Test different GCC phone numbers
+  testGCCPhoneNumbers() {
+    const testNumbers = [
+      { country: 'KW', phone: '99887766', valid: true },
+      { country: 'SA', phone: '501234567', valid: true },
+      { country: 'AE', phone: '501234567', valid: true },
+      { country: 'QA', phone: '55551234', valid: true },
+      { country: 'BH', phone: '33334444', valid: true },
+      { country: 'OM', phone: '99887766', valid: true },
+    ];
+
+    testNumbers.forEach((test) => {
+      const country = GCC_COUNTRIES.find((c) => c.code === test.country);
+      const validator = CustomValidators.gccPhoneNumber(test.country);
+      const result = validator({ value: test.phone } as any);
+
+      console.log(
+        `Testing ${country?.arabicName}: ${test.phone} - ${
+          result ? 'Invalid' : 'Valid'
+        }`
+      );
+    });
   }
 }

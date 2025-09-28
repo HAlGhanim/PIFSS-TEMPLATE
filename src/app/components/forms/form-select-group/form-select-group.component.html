@@ -15,7 +15,11 @@
   <optgroup [label]="group.label" [disabled]="group.disabled">
     @for (option of group.options; track option.value; let optionIndex = $index)
     {
-    <option [value]="option.value" [disabled]="option.disabled">
+    <option
+      [value]="option.value"
+      [disabled]="option.disabled"
+      [attr.data-icon]="option.icon"
+    >
       {{ getOptionLabel(option, groupIndex, optionIndex) }}
     </option>
     }
