@@ -1,28 +1,50 @@
-<select
-  [id]="selectId()"
-  [disabled]="isDisabled()"
-  [value]="value()"
-  (change)="onSelectChange($event)"
-  (blur)="onTouched()"
-  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed bg-white form-select-rtl text-right"
-  [ngClass]="selectClass()"
-  dir="rtl"
->
-  @if (placeholder()) {
-  <option value="">{{ placeholder() }}</option>
-  } @if (hasGroups()) { @for (group of groups(); track group.label; let
-  groupIndex = $index) { @if (group.options.length > 0) {
-  <optgroup [label]="group.label" [disabled]="group.disabled">
-    @for (option of group.options; track option.value; let optionIndex = $index)
-    {
-    <option
-      [value]="option.value"
-      [disabled]="option.disabled"
-      [attr.data-icon]="option.icon"
+<div class="relative">
+  <select
+    [id]="selectId()"
+    [disabled]="isDisabled()"
+    [value]="value()"
+    (change)="onSelectChange($event)"
+    (blur)="onTouched()"
+    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed bg-white text-right appearance-none"
+    [ngClass]="selectClass()"
+    dir="rtl"
+  >
+    @if (placeholder()) {
+    <option value="">{{ placeholder() }}</option>
+    } @if (hasGroups()) { @for (group of groups(); track group.label; let
+    groupIndex = $index) { @if (group.options.length > 0) {
+    <optgroup [label]="group.label" [disabled]="group.disabled">
+      @for (option of group.options; track option.value; let optionIndex =
+      $index) {
+      <option
+        [value]="option.value"
+        [disabled]="option.disabled"
+        [attr.data-icon]="option.icon"
+      >
+        {{ getOptionLabel(option, groupIndex, optionIndex) }}
+      </option>
+      }
+    </optgroup>
+    } } }
+  </select>
+
+  <!-- Custom chevron icon -->
+  <div
+    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+  >
+    <svg
+      class="w-5 h-5 text-gray-400"
+      [class.text-gray-300]="isDisabled()"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
     >
-      {{ getOptionLabel(option, groupIndex, optionIndex) }}
-    </option>
-    }
-  </optgroup>
-  } } }
-</select>
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M19 9l-7 7-7-7"
+      />
+    </svg>
+  </div>
+</div>

@@ -11,7 +11,18 @@ import { SelectOption, SelectOptionGroup } from '../../../interfaces';
   selector: 'app-form-select-group',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './form-select-group.component.html',
+  templateUrl: `./form-select-group.component.html`,
+  styles: [
+    `
+      /* Additional styles to ensure consistent appearance across browsers */
+      :host ::ng-deep select {
+        /* Remove default arrow in IE/Edge */
+        &::-ms-expand {
+          display: none;
+        }
+      }
+    `,
+  ],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

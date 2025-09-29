@@ -14,23 +14,26 @@
       </h2>
 
       <div class="flex gap-4 flex-wrap">
-        <button
-          (click)="toastService.showSuccess('تمت العملية بنجاح')"
-          class="btn-primary"
-        >
-          عرض رسالة نجاح
-        </button>
+        <app-button
+          text="عرض رسالة نجاح"
+          (btnClick)="toastService.showSuccess('تمت العملية بنجاح')"
+          variant="primary"
+          [showIcon]="false"
+        ></app-button>
 
-        <button
-          (click)="toastService.showError('حدث خطأ في العملية')"
-          class="btn-secondary"
-        >
-          عرض رسالة خطأ
-        </button>
+        <app-button
+          text="عرض رسالة خطأ"
+          (btnClick)="toastService.showError('حدث خطأ في العملية')"
+          variant="secondary"
+          [showIcon]="false"
+        ></app-button>
 
-        <button (click)="showToastExamples()" class="btn-secondary">
-          عرض أمثلة متعددة
-        </button>
+        <app-button
+          text="عرض أمثلة متعددة"
+          (btnClick)="showToastExamples()"
+          variant="secondary"
+          [showIcon]="false"
+        ></app-button>
       </div>
     </div>
   </app-card>
@@ -146,67 +149,82 @@
             ></app-form-input>
           </app-form-field>
 
-<!-- Country Selection with Flags -->
-          <app-form-field
-            label="الدولة"
-            [required]="true"
-            [showError]="hasError('phoneCountry')"
-            [errorMessage]="getErrorMessage('phoneCountry')"
-          >
-            <div class="relative">
-              <!-- Custom dropdown button -->
-              <button
-                type="button"
-                (click)="toggleCountryDropdown()"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-white text-right flex items-center justify-between"
-              >
-                <span class="flex items-center gap-2">
-                  @if (getSelectedCountryData(); as country) {
-                    <img [src]="country.flagSvg" [alt]="country.englishName + ' flag'" class="w-6 h-4 object-cover">
-                    <span>{{ country.arabicName }} ({{ country.phoneCode }})</span>
-                  }
-                </span>
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              <!-- Dropdown menu -->
-              @if (showCountryDropdown()) {
-              <div class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                @for (country of gccCountriesList; track country.code) {
-                <button
-                  type="button"
-                  (click)="selectCountry(country.code)"
-                  class="w-full px-3 py-2 text-right hover:bg-gray-50 flex items-center gap-2"
-                  [class.bg-primary]="country.code === selectedCountry()"
-                  [class.text-white]="country.code === selectedCountry()"
-                  [class.hover:bg-primary/80]="country.code === selectedCountry()"
-                >
-                  <img [src]="country.flagSvg" [alt]="country.englishName + ' flag'" class="w-6 h-4 object-cover">
-                  <span>{{ country.arabicName }} ({{ country.phoneCode }})</span>
-                </button>
-                }
-              </div>
-              }
-            </div>
-          </app-form-field>
-
-          <!-- Phone Field with GCC validation -->
+          <!-- Combined Phone Field with Country Selection -->
           <app-form-field
             label="رقم الهاتف"
             [required]="true"
-            [hint]="getPhoneHint()"
-            [showError]="hasError('phone')"
-            [errorMessage]="getErrorMessage('phone')"
+            [hint]="getCombinedPhoneHint()"
+            [showError]="hasError('phoneCountry') || hasError('phone')"
+            [errorMessage]="getCombinedPhoneErrorMessage()"
           >
-            <app-form-input
-              formControlName="phone"
-              type="tel"
-              [placeholder]="getPhonePlaceholder()"
-              restriction="gccPhone"
-              [phoneContext]="{ countryCode: selectedCountry() }"
-            ></app-form-input>
+            <div class="flex gap-2 items-start phone-country-selector">
+              <!-- Custom Country Selector styled like a select -->
+              <div class="relative">
+                <button
+                  type="button"
+                  (click)="toggleCountryDropdown()"
+                  class="h-[42px] w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-white text-right appearance-none flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  [class.border-red-500]="hasError('phoneCountry')"
+                >
+                  @if (getSelectedCountryData(); as country) {
+                  <div class="flex items-center gap-2">
+                    <img 
+                      [src]="country.flagSvg" 
+                      [alt]="country.englishName + ' flag'" 
+                      class="w-6 h-4 object-cover"
+                    />
+                    <span class="text-sm text-gray-700 truncate">{{ country.phoneCode }}</span>
+                  </div>
+                  } @else {
+                  <span class="text-sm text-gray-700">اختر الدولة</span>
+                  }
+                  
+                  <!-- Chevron icon positioned like in select -->
+                  <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" 
+                       fill="none" 
+                       stroke="currentColor" 
+                       viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                <!-- Country Dropdown menu -->
+                @if (showCountryDropdown()) {
+                <div class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  @for (country of gccCountriesList; track country.code) {
+                  <button
+                    type="button"
+                    (click)="selectCountry(country.code)"
+                    class="w-full px-3 py-2 text-right hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                    [class.bg-primary]="country.code === selectedCountry()"
+                    [class.text-white]="country.code === selectedCountry()"
+                    [class.hover:bg-primary/90]="country.code === selectedCountry()"
+                  >
+                    <img 
+                      [src]="country.flagSvg" 
+                      [alt]="country.englishName + ' flag'" 
+                      class="w-6 h-4 object-cover flex-shrink-0"
+                    />
+                    <span class="flex-1 text-sm">{{ country.arabicName }}</span>
+                  </button>
+                  }
+                </div>
+                }
+              </div>
+
+              <!-- Phone Number Input -->
+              <div class="flex-1">
+                <app-form-input
+                  formControlName="phone"
+                  type="tel"
+                  [placeholder]="getPhonePlaceholder()"
+                  restriction="gccPhone"
+                  [phoneContext]="{ countryCode: selectedCountry() }"
+                  dir="ltr"
+                  class="text-left"
+                ></app-form-input>
+              </div>
+            </div>
           </app-form-field>
         </div>
 
@@ -239,7 +257,12 @@
             iconType="download"
           ></app-button>
 
-          <app-button text="إعادة تعيين" (btnClick)="onReset()" [showIcon]="false" variant="secondary"></app-button>
+          <app-button
+            text="إعادة تعيين"
+            (btnClick)="onReset()"
+            [showIcon]="false"
+            variant="secondary"
+          ></app-button>
         </div>
       </form>
     </div>

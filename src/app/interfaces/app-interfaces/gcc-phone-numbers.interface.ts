@@ -24,7 +24,7 @@ export const GCC_COUNTRIES: GCCCountry[] = [
   },
   {
     code: 'SA',
-    arabicName: 'المملكة العربية السعودية',
+    arabicName: 'السعودية',
     englishName: 'Saudi Arabia',
     phoneCode: '+966',
     phoneFormat: '+966 5X XXX-XXXX',
@@ -35,7 +35,7 @@ export const GCC_COUNTRIES: GCCCountry[] = [
   },
   {
     code: 'AE',
-    arabicName: 'الإمارات العربية المتحدة',
+    arabicName: 'الإمارات',
     englishName: 'United Arab Emirates',
     phoneCode: '+971',
     phoneFormat: '+971 5X XXX-XXXX',

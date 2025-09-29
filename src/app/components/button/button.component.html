@@ -28,7 +28,14 @@
       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
     ></path>
   </svg>
-  } @else if (showIcon()) {
+  }
+
+  <!-- Custom content projection -->
+  <ng-content select="[button-content]"></ng-content>
+
+  <!-- Default content if no projection -->
+  @if (!hasProjectedContent) { @if (showIcon() && iconPosition() === 'left' &&
+  !loading()) {
   <svg
     class="ml-2 h-5 w-5"
     fill="none"
@@ -41,5 +48,20 @@
     <path [attr.d]="iconPath()" />
   </svg>
   }
-  {{ text() }}
+
+  <span>{{ text() }}</span>
+
+  @if (showIcon() && iconPosition() === 'right' && !loading()) {
+  <svg
+    class="mr-2 h-5 w-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path [attr.d]="iconPath()" />
+  </svg>
+  } }
 </button>
